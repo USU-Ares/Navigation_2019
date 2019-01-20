@@ -1,12 +1,18 @@
 #ifndef PATH_PLANNER_HPP_
 #define PATH_PLANNER_HPP_
 
+#include <vector>
+
 /**
  * Struct to store GPS coordinate
  */
 struct GPS {
     double lat; /// Stores latitude in degrees
     double lon; /// Stores longitude in degrees
+    GPS() {
+        lat = 0.0;
+        lon = 0.0;
+    }
 };
 
 /**
@@ -22,14 +28,14 @@ enum Direction {
 /**
  * Class to return the heading for the rover along a path given a destination GPS coordinate
  */
-class pathPlanner {
+class PathPlanner {
     public:
         // Constructors
-        A_Star();
-        A_Star(GPS min, GPS max, GPS start, GPS goal);
+        PathPlanner();
+        PathPlanner(GPS min, GPS max, GPS start, GPS goal);
         
         // Destructors
-        ~A_Star();
+        ~PathPlanner();
 
         // Heuristics
         // Helper functions to calculate scores
@@ -38,11 +44,12 @@ class pathPlanner {
         double hScore(GPS current);
 
         // Path plan
-        Heading planPath(GPS current);
+        Direction planPath(GPS current);
 
         // Update cost map
-        void setCostMap(double[][] costMap);
-        void updatePartOfCostMap(double[][] costMap, int x_min, int x_max, int y_min, int y_max);
+        void initializeCostMap(unsigned int height, unsigned int width);
+        void setCostMap(double* costMap);
+        void updatePartOfCostMap(double* costMap, int x_min, int x_max, int y_min, int y_max);
 
         // Conversion between GPS and board index
         void getBoardIndex(GPS point, int& x, int& y);
@@ -64,7 +71,9 @@ class pathPlanner {
         GPS m_currentGoal;  // GPS coordinate of temporary goal for search pattern
 
         // Cost map
-        double[][] costMap;
+        double* m_costMap;
+        unsigned int m_height;
+        unsigned int m_width;
 
         // Path solution
         std::vector<Direction> steps;
