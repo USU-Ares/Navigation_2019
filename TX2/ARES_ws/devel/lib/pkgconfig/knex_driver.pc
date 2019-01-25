@@ -1,0 +1,8 @@
+prefix=/home/nvidia/ARES_ws/devel
+
+Name: knex_driver
+Description: Description of knex_driver
+Version: 0.0.0
+Cflags: -I/home/nvidia/ARES_ws/src/knex_driver/include
+Libs: -L/home/nvidia/ARES_ws/devel/lib -lknex_driver
+Requires: roscpp sensor_msgs serial

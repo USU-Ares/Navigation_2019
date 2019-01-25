@@ -1,0 +1,8 @@
+prefix=/home/derek/test_ws/src/data_logger/cmake-build-debug/devel
+
+Name: data_logger
+Description: Description of data_logger
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/derek/test_ws/src/data_logger/cmake-build-debug/devel/lib 
+Requires: 

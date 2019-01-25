@@ -1,0 +1,2 @@
+data_logger:inertial_sense_ros:ins_to_tf:knex_driver:realsense/realsense2_camera:serial:test_tf_broadcaster
+-DCATKIN_DEVEL_PREFIX=/home/nvidia/ARES_ws/devel -DCMAKE_INSTALL_PREFIX=/home/nvidia/ARES_ws/install -G Unix Makefiles

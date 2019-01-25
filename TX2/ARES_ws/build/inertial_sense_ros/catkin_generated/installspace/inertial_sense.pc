@@ -1,0 +1,8 @@
+prefix=/home/nvidia/ARES_ws/install
+
+Name: inertial_sense
+Description: Description of inertial_sense
+Version: 1.1.1
+Cflags: -I/home/nvidia/ARES_ws/install/include
+Libs: -L/home/nvidia/ARES_ws/install/lib 
+Requires: roscpp sensor_msgs geometry_msgs

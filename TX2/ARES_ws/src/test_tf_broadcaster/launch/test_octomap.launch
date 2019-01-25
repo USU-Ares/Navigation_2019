@@ -1,0 +1,13 @@
+<launch>
+  <!-- <remap from="/camera/depth/color/points" to="/cloud_in" /> -->
+  <include file="$(find inertial_sense)/launch/test.launch"/>
+  <include file="$(find realsense2_camera)/launch/demo_pointcloud.launch">
+  </include>
+  <!-- using ins_to_tf for both tf broadcasts <node name="test_tf" pkg="test_tf_broadcaster" type="test_tf_broadcaster_node" /> -->
+  <!-- not working for unknown reason <node name="ins_node" pkg="inertial_sense" type="inertial_sense_node"/> -->
+  <node name="tf_broadcaster" pkg="ins_to_tf" type="ins_to_tf_node"/>
+  <node name="octomap" pkg="octomap_server" type="octomap_server_node">
+    <!-- <param name="frame_id" value="camera_depth_optical_frame"/> -->
+    <param name="frame_id" value="world"/>
+  </node>
+</launch>

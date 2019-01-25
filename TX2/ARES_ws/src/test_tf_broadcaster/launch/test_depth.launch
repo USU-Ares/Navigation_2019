@@ -1,0 +1,8 @@
+<launch>
+  <!-- <remap from="/camera/depth/color/points" to="/cloud_in" /> -->
+  <include file="$(find realsense2_camera)/launch/rs_depthcloud.launch">
+  </include>
+  <node name="test_tf" pkg="test_tf_broadcaster" type="test_tf_broadcaster_node">
+    <param name="child_frame_id" value="_link"/>
+  </node>
+</launch>

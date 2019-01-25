@@ -1,0 +1,8 @@
+prefix=/home/nvidia/ARES_ws/devel
+
+Name: data_logger
+Description: Description of data_logger
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/nvidia/ARES_ws/devel/lib 
+Requires: 

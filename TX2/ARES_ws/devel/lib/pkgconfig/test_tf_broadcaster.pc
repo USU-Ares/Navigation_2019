@@ -1,0 +1,8 @@
+prefix=/home/nvidia/ARES_ws/devel
+
+Name: test_tf_broadcaster
+Description: Description of test_tf_broadcaster
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/nvidia/ARES_ws/devel/lib 
+Requires: 

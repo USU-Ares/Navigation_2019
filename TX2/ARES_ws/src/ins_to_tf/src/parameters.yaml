@@ -1,0 +1,13 @@
+--- ! tf wrapper parameters 
+
+quatX : 0
+quatY : 0
+quatZ : 0
+quatImg : 1
+
+vectorX : 0
+vectorY : 0
+vectorZ : 0.27
+
+
+

@@ -1,0 +1,10 @@
+(cl:defpackage inertial_sense-srv
+  (:use )
+  (:export
+   "FIRMWAREUPDATE"
+   "<FIRMWAREUPDATE-REQUEST>"
+   "FIRMWAREUPDATE-REQUEST"
+   "<FIRMWAREUPDATE-RESPONSE>"
+   "FIRMWAREUPDATE-RESPONSE"
+  ))
+
