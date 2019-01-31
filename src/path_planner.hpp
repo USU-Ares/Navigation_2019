@@ -2,6 +2,7 @@
 #define PATH_PLANNER_HPP_
 
 #include <vector>
+#include <limits>
 
 /**
  * Struct to store GPS coordinate
@@ -12,6 +13,32 @@ struct GPS {
     GPS() {
         lat = 0.0;
         lon = 0.0;
+    }
+};
+
+/**
+ * Struct to keep track of positions
+ */
+struct Location {
+    int x;
+    int y;
+    double fScore;
+    double gScore;
+    double hScore;
+    Location* prev;
+    Location() {
+        fScore = std::numeric_limits<double>::max();
+        gScore = std::numeric_limits<double>::max();
+        hScore = std::numeric_limits<double>::max();
+        x = -1;
+        y = -1;
+        prev = nullptr;
+    }
+    bool operator>(const Location &rhs) const {
+        return this->fScore > rhs.fScore;
+    }
+    bool operator==(const Location &rhs) const {
+        return this->x == rhs.x && this->y == rhs.y;
     }
 };
 
@@ -39,12 +66,14 @@ class PathPlanner {
 
         // Heuristics
         // Helper functions to calculate scores
-        double fScore(GPS current);
-        double gScore(GPS current);
-        double hScore(GPS current);
+        double fScore(Location current);
+        double gScore(Location current);
+        double hScore(Location current);
+        double hScore(Location& current, Location& goal);
 
         // Path plan
-        Direction planPath(GPS current);
+        // Return cost of found path
+        double planPath(GPS current);
 
         // Update cost map
         void initializeCostMap(unsigned int height, unsigned int width);
@@ -52,8 +81,11 @@ class PathPlanner {
         void updatePartOfCostMap(double* costMap, int x_min, int x_max, int y_min, int y_max);
 
         // Conversion between GPS and board index
-        void getBoardIndex(GPS point, int& x, int& y);
-        void getGPSPoint(GPS& point, int x, int y);
+        //void getBoardIndex(GPS point, int* x, int* y);
+        Location getBoardIndex(GPS point);
+        //void getGPSPoint(GPS& point, int x, int y);
+        void getBoardIndex(Location* loc);
+        void getGPSPoint(Location* loc);
 
         // Accessors
         // Modifiers
@@ -76,11 +108,18 @@ class PathPlanner {
         unsigned int m_width;
 
         // Path solution
-        std::vector<Direction> steps;
+        std::vector<Direction> m_steps;
 
         // Score consts
         double gWeight;
         double hWeight;
+
+        // Helper functions
+        Location getMin(std::vector<Location> &set);
+        void  removeMin(std::vector<Location> &set);
+        bool inSet(std::vector<Location> &set, Location &entry);
+        std::vector<Location> getNeighbors(const Location &node);
+        double dist_between(Location start, Location end);
 };
 
 #endif
