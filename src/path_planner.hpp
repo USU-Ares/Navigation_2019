@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <limits>
+#include <math.h>
 
 /**
  * Struct to store GPS coordinate
@@ -13,6 +14,33 @@ struct GPS {
     GPS() {
         lat = 0.0;
         lon = 0.0;
+    }
+    GPS(double latitude, double longitude) {
+        lat = latitude;
+        lon = longitude;
+    }
+    double operator-(GPS rhs) {
+        // Calculate distance to GPS point
+        // Radius of Earth, in meters
+        double R = 6371e3;
+
+        // Convert to radians
+        double lat1_radians =     lat/180*3.141592;
+        double lat2_radians = rhs.lat/180*3.141592;
+
+        double lon1_radians =     lon/180*3.141592;
+        double lon2_radians = rhs.lon/180*3.141592;
+
+        // Calculate haversine formula
+        double h = hav(lat2_radians-lat1_radians) + cos(lat1_radians)*cos(lat2_radians)*hav(lon1_radians-lon2_radians);
+
+        // Calculate the distance
+        double d = 2*R * asin(sqrt(h));
+        return d;
+    }
+    // Haversine function
+    double hav(double degrees) {
+        return 0.5 - cos(degrees)*0.5;
     }
 };
 
@@ -58,7 +86,8 @@ enum Direction {
 class PathPlanner {
     public:
         // Constructors
-        PathPlanner();
+        //PathPlanner();
+        PathPlanner(GPS start, GPS goal);
         PathPlanner(GPS min, GPS max, GPS start, GPS goal);
         
         // Destructors
@@ -66,10 +95,8 @@ class PathPlanner {
 
         // Heuristics
         // Helper functions to calculate scores
-        double fScore(Location current);
-        double gScore(Location current);
-        double hScore(Location current);
-        double hScore(Location& current, Location& goal);
+        bool get_hScore(Location &current);
+        double get_hScore(Location& current, Location& goal);
 
         // Path plan
         // Return cost of found path
@@ -98,9 +125,12 @@ class PathPlanner {
 
         // Position data
         GPS m_start;        // GPS coordinate to begin path planning
-        GPS m_current;      // Current GPS coordinate of rover
-        GPS m_goal;         // GPS coordinate of goal
+        GPS m_gps_current;      // Current GPS coordinate of rover
+        GPS m_gps_goal;         // GPS coordinate of goal
         GPS m_currentGoal;  // GPS coordinate of temporary goal for search pattern
+        // Array position data
+        Location m_current;      // Current Location coordinate of rover
+        Location m_goal;         // Location coordinate of goal
 
         // Cost map
         double* m_costMap;
@@ -120,6 +150,10 @@ class PathPlanner {
         bool inSet(std::vector<Location> &set, Location &entry);
         std::vector<Location> getNeighbors(const Location &node);
         double dist_between(Location start, Location end);
+
+        // Scorers
+        double get_fScore(Location current);
+        double get_gScore(Location current);
 };
 
 #endif

@@ -2,35 +2,62 @@
 #include <bits/stdc++.h>
 #include <algorithm>
 
-PathPlanner::PathPlanner() {
+PathPlanner::PathPlanner(GPS start, GPS goal) {
+    // Initialize the start and goal member variables
+    m_start = start;
+    m_gps_goal = goal;
 
+    // Create cost map
+
+    std::cout << "Created PathPlanner instance\n";
 }
-
 PathPlanner::PathPlanner(GPS min, GPS max, GPS start, GPS goal) {
     m_min = min;
     m_max = max;
     m_start = start;
-    m_goal  = goal;
+    m_gps_goal = goal;
 }
 
 PathPlanner::~PathPlanner() {
+    std::cout << "Destructing object\n";
     if (m_costMap != nullptr) {
         delete m_costMap;
         m_costMap = nullptr;
     }
 }
 
-double PathPlanner::fScore(Location current) {
+double PathPlanner::get_fScore(Location current) {
     return 0.0;
 }
-double PathPlanner::gScore(Location current) {
-    return 0.0;
+// Estimate remaining cost
+double PathPlanner::get_gScore(Location current) {
+    // Get distance between current Location and m_goal, returning that distance
+    return dist_between(current, m_goal);
 }
-double PathPlanner::hScore(Location current) {
-    return fScore(current) + gScore(current);
+/**
+ * Return TRUE if hScore is lower than previous hScore and was updated
+ */
+bool PathPlanner::get_hScore(Location &current) {
+    // Get partial scores
+    double newFScore = get_fScore(current);
+    double newGScore = get_gScore(current);
+
+    // If scores are lower than current score, replace them
+    if (newFScore < current.fScore) {
+        current.fScore = newFScore;
+    }
+    if (newGScore < current.gScore) {
+        current.gScore = newGScore;
+    }
+    // Set hScore to be the sum of F and G if better, and return whether or not it was reassigned
+    if (newFScore + newGScore > current.hScore) {
+        current.hScore = current.fScore + current.gScore;
+        return true;
+    }
+    return false;
 }
-double PathPlanner::hScore(Location& current, Location& goal) {
-    return fScore(current) + gScore(current);
+double PathPlanner::get_hScore(Location& current, Location& goal) {
+    return get_fScore(current) + get_gScore(current);
 }
 
 double PathPlanner::planPath(GPS currentGPS) {
@@ -44,12 +71,12 @@ double PathPlanner::planPath(GPS currentGPS) {
 
     // Inital condition
     currentLocation.gScore = 0;
-    currentLocation.fScore = fScore(currentLocation);
+    currentLocation.fScore = get_fScore(currentLocation);
     openSet.push_back(currentLocation);
 
     // Loop until our open set is not empty
     Location currentNode;
-    Location goalNode = getBoardIndex(m_goal);
+    Location goalNode = getBoardIndex(m_gps_goal);
     while (openSet.size() > 0) {
         // Get lowest cost item from openSet
         currentNode = getMin(openSet);
@@ -79,7 +106,7 @@ double PathPlanner::planPath(GPS currentGPS) {
             if (!inSet(openSet, neighbors[i])) {
                 neighbors[i].prev = &currentNode;
                 neighbors[i].gScore = temp_gScore;
-                neighbors[i].hScore = hScore(currentNode, goalNode);
+                neighbors[i].hScore = get_hScore(currentNode, goalNode);
                 neighbors[i].fScore = temp_gScore + neighbors[i].hScore;
                 openSet.push_back(neighbors[i]);
             }
@@ -142,6 +169,19 @@ std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
     return std::vector<Location>();
 }
 double PathPlanner::dist_between(Location start, Location end) {
+    // Get taxicab distance between two locations
+    double deltaX = start.x - end.x;
+    double deltaY = start.y - end.y;
 
-    return 0;
+    // Make things positive
+    if (deltaX < 0) {
+        deltaX *= -1;
+    }
+    if (deltaY < 0) {
+        deltaY *= -1;
+    }
+
+    // Return taxicab distance
+    return deltaX + deltaY;
 }
+
