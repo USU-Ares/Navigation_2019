@@ -35,7 +35,7 @@ double PathPlanner::get_fScore(Location current) {
 // Estimate remaining cost
 double PathPlanner::get_gScore(Location current) {
     // Get distance between current Location and m_goal, returning that distance
-    return dist_between(current, m_goal);
+    return taxicab(current, m_goal);
 }
 /**
  * Return TRUE if hScore is lower than previous hScore and was updated
@@ -104,7 +104,7 @@ double PathPlanner::planPath(GPS currentGPS) {
             }
 
             // Distance from start to neighbor
-            double temp_gScore = currentNode.gScore + dist_between(currentNode, neighbors[i]);
+            double temp_gScore = currentNode.gScore + taxicab(currentNode, neighbors[i]);
 
             // Check if neighbor not in openSet
             if (!inSet(openSet, neighbors[i])) {
@@ -178,18 +178,10 @@ std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
 
     return std::vector<Location>();
 }
-double PathPlanner::dist_between(Location start, Location end) {
+unsigned PathPlanner::taxicab(Location start, Location end) {
     // Get taxicab distance between two locations
-    double deltaX = start.x - end.x;
-    double deltaY = start.y - end.y;
-
-    // Make things positive
-    if (deltaX < 0) {
-        deltaX *= -1;
-    }
-    if (deltaY < 0) {
-        deltaY *= -1;
-    }
+    unsigned deltaX = abs(start.x - end.x);
+    unsigned deltaY = abs(start.y - end.y);
 
     // Return taxicab distance
     return deltaX + deltaY;

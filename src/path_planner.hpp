@@ -149,7 +149,7 @@ class PathPlanner {
         void  removeMin(std::vector<Location> &set);
         bool inSet(std::vector<Location> &set, Location &entry);
         std::vector<Location> getNeighbors(const Location &node);
-        double dist_between(Location start, Location end);
+        unsigned taxicab(Location start, Location end);
 
         // Scorers
         double get_fScore(Location current);
