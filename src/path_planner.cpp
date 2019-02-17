@@ -3,6 +3,7 @@
 #include <algorithm>
 
 PathPlanner::PathPlanner(GPS start, GPS goal) {
+    // TODO
     // Initialize the start and goal member variables
     m_start = start;
     m_gps_goal = goal;
@@ -12,6 +13,7 @@ PathPlanner::PathPlanner(GPS start, GPS goal) {
     std::cout << "Created PathPlanner instance\n";
 }
 PathPlanner::PathPlanner(GPS min, GPS max, GPS start, GPS goal) {
+    // TODO
     m_min = min;
     m_max = max;
     m_start = start;
@@ -27,6 +29,7 @@ PathPlanner::~PathPlanner() {
 }
 
 double PathPlanner::get_fScore(Location current) {
+    // TODO
     return 0.0;
 }
 // Estimate remaining cost
@@ -83,6 +86,7 @@ double PathPlanner::planPath(GPS currentGPS) {
 
         // Check if we have reached the goal
         if (currentNode.x == goalNode.x && currentNode.y == goalNode.y) {
+            // TODO
             // Construct path
         }
 
@@ -137,13 +141,16 @@ void PathPlanner::setCostMap(double* costMap) {
 }
 
 Location PathPlanner::getBoardIndex(GPS point) {
+    // TODO
 
     return Location();
 }
 void PathPlanner::getBoardIndex(Location* loc) {
+    // TODO
 
 }
 void PathPlanner::getGPSPoint(Location* loc) {
+    // TODO
 
 }
 
@@ -155,9 +162,11 @@ void PathPlanner::updatePartOfCostMap(double* costMap, int x_min, int x_max, int
     }
 }
 Location PathPlanner::getMin(std::vector<Location> &set) {
+    // TODO
     return Location();
 }
 void PathPlanner::removeMin(std::vector<Location> &set) {
+    // TODO
 
 }
 
@@ -165,6 +174,7 @@ bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
     return std::find(set.begin(), set.end(), entry) != set.end();
 }
 std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
+    // TODO
 
     return std::vector<Location>();
 }
@@ -184,4 +194,3 @@ double PathPlanner::dist_between(Location start, Location end) {
     // Return taxicab distance
     return deltaX + deltaY;
 }
-
