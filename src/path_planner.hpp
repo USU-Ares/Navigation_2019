@@ -5,6 +5,12 @@
 #include <limits>
 #include <math.h>
 
+// Convert degrees to radians
+double degToRad(deg)
+{
+   return deg*(3.141596/180);   
+}
+
 /**
  * Struct to store GPS coordinate
  */
