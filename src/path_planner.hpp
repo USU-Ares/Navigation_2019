@@ -40,7 +40,6 @@ struct GPS {
         
         // Apply haversine function
         double haversine = hav(rhs.lat - lat) + cos(lat) * cos(rhs.lat) * hav(lon - rhs.lon);
-        
         return 2 * earthRadius * asin(sqrt(haversine));
         
         /*
@@ -162,10 +161,10 @@ class PathPlanner {
         GPS m_max;
 
         // Position data
-        GPS m_start;        // GPS coordinate to begin path planning
-        GPS m_gps_current;      // Current GPS coordinate of rover
-        GPS m_gps_goal;         // GPS coordinate of goal
-        GPS m_currentGoal;  // GPS coordinate of temporary goal for search pattern
+        GPS m_start;             // GPS coordinate to begin path planning
+        GPS m_gps_current;       // Current GPS coordinate of rover
+        GPS m_gps_goal;          // GPS coordinate of goal
+        GPS m_currentGoal;       // GPS coordinate of temporary goal for search pattern
         // Array position data
         Location m_current;      // Current Location coordinate of rover
         Location m_goal;         // Location coordinate of goal

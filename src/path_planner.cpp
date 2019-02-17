@@ -163,22 +163,50 @@ void PathPlanner::updatePartOfCostMap(double* costMap, int x_min, int x_max, int
     }
 }
 Location PathPlanner::getMin(std::vector<Location> &set) {
-    // TODO
-    return Location();
+    // Find the Location with the lowest f score from the open set
+	
+	Location min = set[0];
+	for (int i = 0; i < set.size(); i++)
+	{
+		if (set[i].fScore < min.fScore)
+		{
+			min = set[i];
+		}
+	}
+	
+    return min;
 }
 void PathPlanner::removeMin(std::vector<Location> &set) {
-    // TODO
+    // Find and remove the Location with minimum f score from the open set
+	
+	int minIndex = 0;
+	Location min = set[minIndex];
+	for (int i = 0; i < set.size(); i++)
+	{
+		if (set[i].fScore < min.fScore)
+		{
+			minIndex = i; 
+		}
+	}
+	
+	set.erase(set.begin() + minIndex);
+	return;
 
 }
 
 bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
     return std::find(set.begin(), set.end(), entry) != set.end();
 }
-std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
-    // TODO
 
-    return std::vector<Location>();
+std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
+    // Return the north, south, east, and west neighbors of the current Location node
+	
+	// TODO The structure containing the locations must be implemented first. 
+	std::vector<Location> neighbors;
+
+    return neighbors;
 }
+
 unsigned PathPlanner::taxicab(Location start, Location end) {
     // Get taxicab distance between two locations
     unsigned deltaX = abs(start.x - end.x);
