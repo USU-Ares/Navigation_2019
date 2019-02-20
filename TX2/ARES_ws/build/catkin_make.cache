@@ -1,2 +1,0 @@
-data_logger:ins_to_tf:knex_driver:test_tf_broadcaster
--DCATKIN_DEVEL_PREFIX=/home/derek/Navigation_2019/TX2/ARES_ws/devel -DCMAKE_INSTALL_PREFIX=/home/derek/Navigation_2019/TX2/ARES_ws/install -G Unix Makefiles

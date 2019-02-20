@@ -1,8 +1,0 @@
-prefix=/home/derek/test_ws/src/test_tf_broadcaster/cmake-build-debug/devel
-
-Name: test_tf_broadcaster
-Description: Description of test_tf_broadcaster
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/derek/test_ws/src/test_tf_broadcaster/cmake-build-debug/devel/lib 
-Requires: 

@@ -1,8 +1,0 @@
-prefix=/home/nvidia/ARES_ws/install
-
-Name: realsense2_camera
-Description: Description of realsense2_camera
-Version: 2.0.3
-Cflags: -I/home/nvidia/ARES_ws/install/include
-Libs: -L/home/nvidia/ARES_ws/install/lib -lrealsense2_camera
-Requires: message_runtime roscpp sensor_msgs std_msgs librealsense2 nodelet cv_bridge image_transport dynamic_reconfigure
