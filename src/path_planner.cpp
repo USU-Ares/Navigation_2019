@@ -1,8 +1,10 @@
 #include "path_planner.hpp"
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
+#include <iostream>
 #include <algorithm>
 
 PathPlanner::PathPlanner(GPS start, GPS goal) {
+    // TODO
     // Initialize the start and goal member variables
     m_start = start;
     m_gps_goal = goal;
@@ -12,6 +14,7 @@ PathPlanner::PathPlanner(GPS start, GPS goal) {
     std::cout << "Created PathPlanner instance\n";
 }
 PathPlanner::PathPlanner(GPS min, GPS max, GPS start, GPS goal) {
+    // TODO
     m_min = min;
     m_max = max;
     m_start = start;
@@ -27,12 +30,13 @@ PathPlanner::~PathPlanner() {
 }
 
 double PathPlanner::get_fScore(Location current) {
+    // TODO
     return 0.0;
 }
 // Estimate remaining cost
 double PathPlanner::get_gScore(Location current) {
     // Get distance between current Location and m_goal, returning that distance
-    return dist_between(current, m_goal);
+    return taxicab(current, m_goal);
 }
 /**
  * Return TRUE if hScore is lower than previous hScore and was updated
@@ -83,6 +87,7 @@ double PathPlanner::planPath(GPS currentGPS) {
 
         // Check if we have reached the goal
         if (currentNode.x == goalNode.x && currentNode.y == goalNode.y) {
+            // TODO
             // Construct path
         }
 
@@ -100,7 +105,7 @@ double PathPlanner::planPath(GPS currentGPS) {
             }
 
             // Distance from start to neighbor
-            double temp_gScore = currentNode.gScore + dist_between(currentNode, neighbors[i]);
+            double temp_gScore = currentNode.gScore + taxicab(currentNode, neighbors[i]);
 
             // Check if neighbor not in openSet
             if (!inSet(openSet, neighbors[i])) {
@@ -137,13 +142,16 @@ void PathPlanner::setCostMap(double* costMap) {
 }
 
 Location PathPlanner::getBoardIndex(GPS point) {
+    // TODO
 
     return Location();
 }
 void PathPlanner::getBoardIndex(Location* loc) {
+    // TODO
 
 }
 void PathPlanner::getGPSPoint(Location* loc) {
+    // TODO
 
 }
 
@@ -155,33 +163,55 @@ void PathPlanner::updatePartOfCostMap(double* costMap, int x_min, int x_max, int
     }
 }
 Location PathPlanner::getMin(std::vector<Location> &set) {
-    return Location();
+    // Find the Location with the lowest f score from the open set
+	
+	Location min = set[0];
+	for (int i = 0; i < set.size(); i++)
+	{
+		if (set[i].fScore < min.fScore)
+		{
+			min = set[i];
+		}
+	}
+	
+    return min;
 }
 void PathPlanner::removeMin(std::vector<Location> &set) {
+    // Find and remove the Location with minimum f score from the open set
+	
+	int minIndex = 0;
+	Location min = set[minIndex];
+	for (int i = 0; i < set.size(); i++)
+	{
+		if (set[i].fScore < min.fScore)
+		{
+			minIndex = i; 
+		}
+	}
+	
+	set.erase(set.begin() + minIndex);
+	return;
 
 }
 
 bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
     return std::find(set.begin(), set.end(), entry) != set.end();
 }
+
 std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
+    // Return the north, south, east, and west neighbors of the current Location node
+	
+	// TODO The structure containing the locations must be implemented first. 
+	std::vector<Location> neighbors;
 
-    return std::vector<Location>();
+    return neighbors;
 }
-double PathPlanner::dist_between(Location start, Location end) {
-    // Get taxicab distance between two locations
-    double deltaX = start.x - end.x;
-    double deltaY = start.y - end.y;
 
-    // Make things positive
-    if (deltaX < 0) {
-        deltaX *= -1;
-    }
-    if (deltaY < 0) {
-        deltaY *= -1;
-    }
+unsigned PathPlanner::taxicab(Location start, Location end) {
+    // Get taxicab distance between two locations
+    unsigned deltaX = abs(start.x - end.x);
+    unsigned deltaY = abs(start.y - end.y);
 
     // Return taxicab distance
     return deltaX + deltaY;
 }
-

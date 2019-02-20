@@ -5,25 +5,44 @@
 #include <limits>
 #include <math.h>
 
+
+const double pi = acos(-1);
+
 /**
  * Struct to store GPS coordinate
  */
 struct GPS {
     double lat; /// Stores latitude in degrees
     double lon; /// Stores longitude in degrees
+    
     GPS() {
         lat = 0.0;
         lon = 0.0;
     }
+    
     GPS(double latitude, double longitude) {
-        lat = latitude;
-        lon = longitude;
+        // Input should always be in degrees, convert to radians for processing
+        lat = degToRad(latitude);
+        lon = degToRad(longitude);
     }
+    
+    double degToRad(double angle)
+    {
+        // Convert degrees to radians
+        return angle*(pi/180);   
+    }
+    
     double operator-(GPS rhs) {
         // Calculate distance to GPS point
+        
         // Radius of Earth, in meters
-        double R = 6371e3;
-
+        const double earthRadius = 6371e3;
+        
+        // Apply haversine function
+        double haversine = hav(rhs.lat - lat) + cos(lat) * cos(rhs.lat) * hav(lon - rhs.lon);
+        return 2 * earthRadius * asin(sqrt(haversine));
+        
+        /*
         // Convert to radians
         double lat1_radians =     lat/180*3.141592;
         double lat2_radians = rhs.lat/180*3.141592;
@@ -37,10 +56,28 @@ struct GPS {
         // Calculate the distance
         double d = 2*R * asin(sqrt(h));
         return d;
+        */
+        
     }
+    
     // Haversine function
-    double hav(double degrees) {
-        return 0.5 - cos(degrees)*0.5;
+    double hav(double angle) {
+        return 0.5 - cos(angle)*0.5;
+    }
+    
+    // Calculate the x and y difference
+    double calcXDiff(GPS newGPS)
+    {
+      GPS temp = newGPS;
+      temp.lon = this->lon;
+      return (*this - temp);
+    }
+    
+    double calcYDiff(GPS newGPS)
+    {
+      GPS temp = newGPS;
+      temp.lat = this->lat;
+      return (*this - temp);
     }
 };
 
@@ -124,10 +161,10 @@ class PathPlanner {
         GPS m_max;
 
         // Position data
-        GPS m_start;        // GPS coordinate to begin path planning
-        GPS m_gps_current;      // Current GPS coordinate of rover
-        GPS m_gps_goal;         // GPS coordinate of goal
-        GPS m_currentGoal;  // GPS coordinate of temporary goal for search pattern
+        GPS m_start;             // GPS coordinate to begin path planning
+        GPS m_gps_current;       // Current GPS coordinate of rover
+        GPS m_gps_goal;          // GPS coordinate of goal
+        GPS m_currentGoal;       // GPS coordinate of temporary goal for search pattern
         // Array position data
         Location m_current;      // Current Location coordinate of rover
         Location m_goal;         // Location coordinate of goal
@@ -149,7 +186,7 @@ class PathPlanner {
         void  removeMin(std::vector<Location> &set);
         bool inSet(std::vector<Location> &set, Location &entry);
         std::vector<Location> getNeighbors(const Location &node);
-        double dist_between(Location start, Location end);
+        unsigned taxicab(Location start, Location end);
 
         // Scorers
         double get_fScore(Location current);
