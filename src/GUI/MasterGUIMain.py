@@ -1,9 +1,12 @@
 '''
-Kaden Archibald
-USU Ares Team
+Original Author: Kaden Archibald
+ARES Team - Navigation & Autonomy
+
+Utah State University
+Department of Mechanical and Aerospace Engineering
 
 Created: Jan 11, 2019
-Revised: Feb 12, 2019
+Revised: Feb 20, 2019
 Version: IPython 6.2.1 (Anaconda distribution) with Python 3.6.4
 
 Driver Code for Main GUI

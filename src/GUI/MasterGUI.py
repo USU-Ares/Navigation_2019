@@ -1,21 +1,24 @@
 '''
-Kaden Archibald
-USU Ares Team
+Original Author: Kaden Archibald
+ARES Team - Navigation & Autonomy
+
+Utah State University
+Department of Mechanical and Aerospace Engineering
 
 Created: Jan 11, 2019
-Revised: Feb 14, 2019
+Revised: Feb 20, 2019
 Version: IPython 6.2.1 (Anaconda distribution) with Python 3.6.4
 
 Main GUI Source Code
 '''
 
+
 # GUI Module
 import tkinter as tk
+# Check version. Should be 8.5 or higher
 requiredVersion = 8.5
-if tk.TkVersion < requiredVersion:
-    # Check version. Should be 8.5 or higher
-    raise ValueError('Please update version of tkinter')
-    
+assert tk.TkVersion >= requiredVersion, 'Please update version of tkinter'
+
 # Image Tools
 from PIL import Image, ImageTk
     
@@ -51,17 +54,21 @@ class MasterGUI(tk.Frame):
         tk.Frame.__init__(self, self.master)
         self.grid()
         
-        # Initialize member variables
+        # Initialize member variables. The member variables contain both
+        # textual and graphical Navigation information.
         self.xData = []
         self.yData = []
+        self.bearing = None
         self.videoPanel = None
         
-        self.figs = 3
+        self.figs = 3                       # Sig figs for rounding
+        self.updateCount = 0                # Plus one for every update cycle
 
         # Create widgets and elements
+        self.inputGPS()
         self.createPlot()
         self.createCompass()
-        #self.createWidgets()
+        self.createWidgets()
 
 
     def appExec(self):
@@ -85,19 +92,27 @@ class MasterGUI(tk.Frame):
             #ros.spinOnce()
 
             sleep(sleepTime)
+            self.updateCount += 1
 
         #tk.mainloop()
+        
+        return None
+
 
     def halt(self):
         root.quit()
         #root.destroy()
+        
+        return None
 
 
     def createWidgets(self):
         ''' Create buttons, slider, etc. '''
         
         quitButton = tk.Button(self.master, text = 'Exit', command = self.halt)
-        quitButton.grid(column = 0, row = 1, sticky = 'W')
+        quitButton.grid(column = 2, row = 0, sticky = 'SW')
+        
+        return None
         
         
     def getBearing(self):
@@ -105,30 +120,28 @@ class MasterGUI(tk.Frame):
         
         # Use ros here
         
-        # Placeholder in order to display somethiing in the test application
-        return randint(0, 360)
+        # Placeholder in order to display something in the test application
+        self.bearing = randint(0, 360)
+        return None
     
     
     def updateTextBoxes(self):
         ''' Update any text information in the gui. '''
         
+        # Create text box for bearing and xy-coordinate
+        msg = ''
+        msg += 'Bearing: ' + str(self.bearing) + '\n'
+        
+        thisPos = dm.getLatestPositionData(self.updateCount)
+        msg += 'X-pos: ' + str(round(thisPos[0], self.figs)) + '\n'
+        msg += 'Y-pos: ' + str(round(thisPos[1], self.figs)) + '\n'
+        
+        # And embed this text box in the application
+        self.bearingText = tk.Label(self.master, text = msg)
+        
         textColumn = 2
-        
-        # Create text box for bearing
-        bearingMessage = 'Bearing: ' + str(self.getBearing())
-        self.bearingText = tk.Label(self.master, text = bearingMessage)
-        self.bearingText.grid(column = textColumn, row = 0, sticky = 'N')
-        
-        # Create text box for x position
-        thisPos = dm.getLatestPositionData()
-        posxMessage = 'X-pos: ' + str(round(thisPos[0], self.figs))
-        self.xText = tk.Label(self.master, text = posxMessage)
-        self.xText.grid(column = textColumn, row = 1, sticky = 'N')
-        
-        # Create text box for y position
-        posyMessage = 'Y-pos: ' + str(round(thisPos[1], self.figs))
-        self.yText = tk.Label(self.master, text = posyMessage)
-        self.yText.grid(column = textColumn, row = 2, sticky = 'N')
+        textRow = 0
+        self.bearingText.grid(column = textColumn, row = textRow, sticky = 'N')
         
         return None
 
@@ -140,11 +153,16 @@ class MasterGUI(tk.Frame):
         #self.fig, self.axes = plt.subplots()
         self.fig = plt.figure(1)
         self.axes = plt.subplot()
-        self.axes.plot(0,0)
         
         # Embed in tkinter GUI
         self.fig.canvas = FigureCanvasTkAgg(self.fig, master = root)
         self.fig.canvas.get_tk_widget().grid(column = 0, row = 0)
+        
+        self.axes.plot(0, 0, color = 'green')
+        newLoc = self.calcWaypoints()
+        self.axes.plot(newLoc[0], newLoc[1], color = 'green')
+        
+        return None
         
 
     def updatePlot(self):
@@ -154,7 +172,7 @@ class MasterGUI(tk.Frame):
         '''
 
         # Fetch and plot data
-        newPos = dm.getLatestPositionData()
+        newPos = dm.getLatestPositionData(self.updateCount)
         self.xData.append(newPos[0])
         self.yData.append(newPos[1])
         self.axes.plot(self.xData, self.yData, color = 'black')
@@ -167,6 +185,8 @@ class MasterGUI(tk.Frame):
         # Add data to plot and flush
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+        
+        return None
 
 
     def createCompass(self):
@@ -180,6 +200,8 @@ class MasterGUI(tk.Frame):
         # Embed
         self.polar.canvas = FigureCanvasTkAgg(self.polar, master = root)
         self.polar.canvas.get_tk_widget().grid(column = 1, row = 0)
+        
+        return None
 
 
     def updateCompass(self):
@@ -188,8 +210,9 @@ class MasterGUI(tk.Frame):
         # Clear the old compass point
         self.pole.cla()
         
-        radii = [i/100 for i in range(2)]
-        thisAngle = self.getBearing()
+        radii = [0, 1] 
+        self.getBearing()
+        thisAngle = self.bearing
         angles = [thisAngle for i in range(2)]
         
         # Plot data
@@ -199,6 +222,44 @@ class MasterGUI(tk.Frame):
         self.polar.canvas.draw()
         self.polar.canvas.flush_events()
         
+        return None
+        
+
+    def inputGPS(self):
+        ''' End user must manually specify starting and stopping GPS. '''
+        
+        self.waypoints = {}
+        
+#        startLat = float(input('Enter Starting Latitutde in Deg> '))
+#        startLon = float(input('Enter Starting Longitude in Deg> '))
+        startLat = 0
+        startLon = 0
+        self.waypoints['initial'] = [startLat, startLon]
+        
+#        endLat = float(input('Enter Ending Latitutde in Deg> '))
+#        endLon = float(input('Enter Ending Longitude in Deg> '))
+        endLat = 0.0001
+        endLon = 0.0001
+        self.waypoints['final'] = [endLat, endLon]
+        
+        # Before we do anything, convert to radians
+        for key in self.waypoints.keys():
+            #map(dm.degToRad, self.waypoints[key])
+            for i in range(len(self.waypoints[key])):
+                self.waypoints[key][i] = dm.degToRad(self.waypoints[key][i])
+        
+        return None
+    
+    
+    def calcWaypoints(self):
+        ''' Given the waypoints, find their xy-coordinates. '''
+        
+        startLoc = dm.haversine(*self.waypoints['initial'])
+        endLoc = dm.haversine(*self.waypoints['final'])
+        
+        return [endLoc[0]-startLoc[0], endLoc[1]-startLoc[1]]
+
+
 
     def embedPhoto(self):
         ''' Embed a static image. '''
@@ -216,7 +277,7 @@ class MasterGUI(tk.Frame):
         self.videoPanel.image = frameTK
         self.videoPanel.grid(column = 4, row = 4)
         
-            
+        return None
 
 
 
