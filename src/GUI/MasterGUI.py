@@ -1,6 +1,7 @@
 '''
 Original Author: Kaden Archibald
 ARES Team - Navigation & Autonomy
+https://github.com/USU-Ares/Navigation_2019
 
 Utah State University
 Department of Mechanical and Aerospace Engineering
@@ -18,6 +19,7 @@ import tkinter as tk
 # Check version. Should be 8.5 or higher
 requiredVersion = 8.5
 assert tk.TkVersion >= requiredVersion, 'Please update version of tkinter'
+
 
 # Image Tools
 from PIL import Image, ImageTk
@@ -66,6 +68,7 @@ class MasterGUI(tk.Frame):
 
         # Create widgets and elements
         self.inputGPS()
+        self.getBearing()
         self.createPlot()
         self.createCompass()
         self.createWidgets()
@@ -87,6 +90,7 @@ class MasterGUI(tk.Frame):
             self.updatePlot()
             self.updateCompass()
             self.updateTextBoxes()
+            self.getBearing()
             
             # Spin the ros node
             #ros.spinOnce()
@@ -110,7 +114,7 @@ class MasterGUI(tk.Frame):
         ''' Create buttons, slider, etc. '''
         
         quitButton = tk.Button(self.master, text = 'Exit', command = self.halt)
-        quitButton.grid(column = 2, row = 0, sticky = 'SW')
+        quitButton.grid(column = 2, row = 1, sticky = 'SW')
         
         return None
         
@@ -121,7 +125,7 @@ class MasterGUI(tk.Frame):
         # Use ros here
         
         # Placeholder in order to display something in the test application
-        self.bearing = randint(0, 360)
+        self.bearing = randint(30, 60)
         return None
     
     
@@ -130,18 +134,27 @@ class MasterGUI(tk.Frame):
         
         # Create text box for bearing and xy-coordinate
         msg = ''
-        msg += 'Bearing: ' + str(self.bearing) + '\n'
-        
         thisPos = dm.getLatestPositionData(self.updateCount)
+        
         msg += 'X-pos: ' + str(round(thisPos[0], self.figs)) + '\n'
         msg += 'Y-pos: ' + str(round(thisPos[1], self.figs)) + '\n'
+        msg += 'Bearing: ' + str(self.bearing) + '\n'
         
         # And embed this text box in the application
         self.bearingText = tk.Label(self.master, text = msg)
+        self.bearingText.config(width = 20)
+        self.bearingText.config(font = ('Consolas', 12))
         
         textColumn = 2
         textRow = 0
-        self.bearingText.grid(column = textColumn, row = textRow, sticky = 'N')
+        self.bearingText.grid(column = textColumn, row = textRow, sticky = 'NW')
+        
+        gps = ''
+        gps += 'Initial' + '\n'
+        gps += 'Lat: ' + str(round(self.waypoints['start'][0], self.figs))
+        gps += 'Lon: ' + str(round(self.waypoints['start'][1], self.figs))
+        
+        self.gpsText = tk.Label(self.master, text = gps)
         
         return None
 
@@ -150,7 +163,6 @@ class MasterGUI(tk.Frame):
         ''' Initialize the matplotlib scatter plot. '''
 
         # Create the figure and axes
-        #self.fig, self.axes = plt.subplots()
         self.fig = plt.figure(1)
         self.axes = plt.subplot()
         
@@ -158,9 +170,15 @@ class MasterGUI(tk.Frame):
         self.fig.canvas = FigureCanvasTkAgg(self.fig, master = root)
         self.fig.canvas.get_tk_widget().grid(column = 0, row = 0)
         
-        self.axes.plot(0, 0, color = 'green')
+        # Plot the first point
+        self.axes.plot([0], [0], color = 'black', label = 'Path')
+        
+        # Plot the GPS waypoints
+        self.axes.plot([0], [0], color = 'red', marker = 'o', \
+                       label = 'Initial')
         newLoc = self.calcWaypoints()
-        self.axes.plot(newLoc[0], newLoc[1], color = 'green')
+        self.axes.plot([newLoc[0]], [newLoc[1]], color = 'green', \
+                       marker = 'o', label = 'Final')
         
         return None
         
@@ -181,6 +199,7 @@ class MasterGUI(tk.Frame):
         self.axes.set_title('X and Y Position Relative to Starting Point')
         self.axes.set_xlabel('meters')
         self.axes.set_ylabel('meters')
+        self.axes.legend(loc = 'lower right')
         
         # Add data to plot and flush
         self.fig.canvas.draw()
@@ -195,11 +214,12 @@ class MasterGUI(tk.Frame):
         # Create the figure and axes
         self.polar = plt.figure(2)
         self.pole = plt.subplot(polar = True)
-        self.pole.plot(0,0)
+        self.pole.set_yticklabels([])
+        self.pole.set_xticklabels(['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'])
         
         # Embed
         self.polar.canvas = FigureCanvasTkAgg(self.polar, master = root)
-        self.polar.canvas.get_tk_widget().grid(column = 1, row = 0)
+        self.polar.canvas.get_tk_widget().grid(column = 0, row = 1)
         
         return None
 
@@ -210,13 +230,20 @@ class MasterGUI(tk.Frame):
         # Clear the old compass point
         self.pole.cla()
         
-        radii = [0, 1] 
-        self.getBearing()
-        thisAngle = self.bearing
+        radii = [0, 1]
+        # After many days of debugging, it was found that pyplot expects
+        # theta coordiantes in radians even though the default theta 
+        # coordinate axes display degrees. Good to know!
+        thisAngle = dm.degToRad(self.bearing)
         angles = [thisAngle for i in range(2)]
         
         # Plot data
-        self.pole.plot(angles, radii, color = 'black')
+        self.pole.plot(angles, radii, color = 'red')
+        
+        # Formatting
+        #self.pole.set_title('Bearing')
+        self.pole.set_yticklabels([])
+        self.pole.set_xticklabels(['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'])
         
         # Add data and flush
         self.polar.canvas.draw()
@@ -228,6 +255,14 @@ class MasterGUI(tk.Frame):
     def inputGPS(self):
         ''' End user must manually specify starting and stopping GPS. '''
         
+#        textInputApp = tk.Tk()
+#        textInput = tk.simpledialog.askfloat('Input GPS', \
+#            'Enter Lat in Deg: ', parent = textInputApp, minvalue = -180, \
+#            maxvalue = 180)
+        
+#        self.halt(textInputApp)
+        
+        
         self.waypoints = {}
         
 #        startLat = float(input('Enter Starting Latitutde in Deg> '))
@@ -238,8 +273,8 @@ class MasterGUI(tk.Frame):
         
 #        endLat = float(input('Enter Ending Latitutde in Deg> '))
 #        endLon = float(input('Enter Ending Longitude in Deg> '))
-        endLat = 0.0001
-        endLon = 0.0001
+        endLat = 0.0005
+        endLon = 0.0005
         self.waypoints['final'] = [endLat, endLon]
         
         # Before we do anything, convert to radians
@@ -290,5 +325,5 @@ class MasterGUI(tk.Frame):
 # https://pillow.readthedocs.io/en/3.0.x/handbook/tutorial.html
 # https://pillow.readthedocs.io/en/4.2.x/reference/Image.html
 # https://www.tutorialspoint.com/python/tk_grid.htm
-
+# and lots of stack overflow
 

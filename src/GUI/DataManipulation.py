@@ -1,6 +1,7 @@
 '''
 Original Author: Kaden Archibald
 ARES Team - Navigation & Autonomy
+https://github.com/USU-Ares/Navigation_2019
 
 Utah State University
 Department of Mechanical and Aerospace Engineering
