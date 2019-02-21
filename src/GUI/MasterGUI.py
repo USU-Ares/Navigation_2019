@@ -72,6 +72,7 @@ class MasterGUI(tk.Frame):
         self.createPlot()
         self.createCompass()
         self.createWidgets()
+        self.embedPhoto()
 
 
     def appExec(self):
@@ -149,12 +150,12 @@ class MasterGUI(tk.Frame):
         textRow = 0
         self.bearingText.grid(column = textColumn, row = textRow, sticky = 'NW')
         
-        gps = ''
-        gps += 'Initial' + '\n'
-        gps += 'Lat: ' + str(round(self.waypoints['start'][0], self.figs))
-        gps += 'Lon: ' + str(round(self.waypoints['start'][1], self.figs))
-        
-        self.gpsText = tk.Label(self.master, text = gps)
+#        gps = ''
+#        gps += 'Initial' + '\n'
+#        gps += 'Lat: ' + str(round(self.waypoints['start'][0], self.figs))
+#        gps += 'Lon: ' + str(round(self.waypoints['start'][1], self.figs))
+#        
+#        self.gpsText = tk.Label(self.master, text = gps)
         
         return None
 
@@ -310,7 +311,7 @@ class MasterGUI(tk.Frame):
         # Embed the image into the gui
         self.videoPanel = tk.Label(image=frameTK)
         self.videoPanel.image = frameTK
-        self.videoPanel.grid(column = 4, row = 4)
+        self.videoPanel.grid(column = 4, row = 0)
         
         return None
 
