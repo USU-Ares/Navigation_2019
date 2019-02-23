@@ -72,7 +72,7 @@ class MasterGUI(tk.Frame):
         self.createPlot()
         self.createCompass()
         self.createWidgets()
-        self.embedPhoto()
+        #self.embedPhoto()
 
 
     def appExec(self):
