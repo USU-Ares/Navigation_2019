@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>turtlebots</name>
+  <version>1.0.0</version>
+  <description>
+    ROS packages for the senior design (meta package)
+  </description>
+  <license>Apache 2.0</license>
+  <license>BSD</license>
+  <maintainer email="sebastian@helzer.eu">Sebastian</maintainer>
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>path_planner</exec_depend>
+  <exec_depend>vision</exec_depend>
+  <export><metapackage/></export>
+</package>
