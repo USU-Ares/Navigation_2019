@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>platooning_control</name>
+  <name>vision</name>
   <version>1.0.0</version>
   <description>The USU ARES vision package</description>
   <maintainer email="sebastian@helzer.eu">sebastian</maintainer>

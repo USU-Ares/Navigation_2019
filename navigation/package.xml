@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>turtlebots</name>
+  <name>navigation</name>
   <version>1.0.0</version>
   <description>
     ROS packages for the senior design (meta package)

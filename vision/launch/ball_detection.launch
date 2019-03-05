@@ -1,0 +1,12 @@
+<launch>
+
+    <param name="camera_frame" value="bot1/raspicam_node/image_rect"/>
+    <param name="publish_frame" value="dectected_image"/>
+    <param name="ball_tf" value="ball_tf"/>
+    <param name="camera_tf" value="camera_tf"/>
+
+    <node pkg="vision" type="ball_detector.py" name="ball_detector" output="screen">
+
+    </node>
+
+</launch>

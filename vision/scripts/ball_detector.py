@@ -16,16 +16,22 @@ import numpy as np
 import argparse
 import imutils
 import time
+import tf
 
 class image_converter:
 
   def __init__(self):
-    self.image_pub = rospy.Publisher("image_topic_2",Image)
+    publish_frame = rospy.get_param('publish_frame', 'publish_frame')
+
+    self.image_pub = rospy.Publisher(publish_frame,Image,queue_size=10)
     self.greenLower = (110, 46, 56)
     self.greenUpper = (130, 255, 255)
     self.pts = deque(maxlen=20)
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("image_topic",Image,self.callback)
+    
+    cameraFrame = rospy.get_param('camera_frame', 'camera_frame')
+    print(cameraFrame)
+    self.image_sub = rospy.Subscriber(cameraFrame,Image,self.callback)
 
   def callback(self,data):
     try:
