@@ -41,23 +41,6 @@ struct GPS {
         // Apply haversine function
         double haversine = hav(rhs.lat - lat) + cos(lat) * cos(rhs.lat) * hav(lon - rhs.lon);
         return 2 * earthRadius * asin(sqrt(haversine));
-        
-        /*
-        // Convert to radians
-        double lat1_radians =     lat/180*3.141592;
-        double lat2_radians = rhs.lat/180*3.141592;
-
-        double lon1_radians =     lon/180*3.141592;
-        double lon2_radians = rhs.lon/180*3.141592;
-
-        // Calculate haversine formula
-        double h = hav(lat2_radians-lat1_radians) + cos(lat1_radians)*cos(lat2_radians)*hav(lon1_radians-lon2_radians);
-
-        // Calculate the distance
-        double d = 2*R * asin(sqrt(h));
-        return d;
-        */
-        
     }
     
     // Haversine function
@@ -118,13 +101,13 @@ enum Direction {
 };
 
 /**
- * Class to return the heading for the rover along a path given a destination GPS coordinate
+ * Class to return the trajectory for the rover along a path given a destination GPS coordinate
  */
 class PathPlanner {
     public:
         // Constructors
         //PathPlanner();
-        PathPlanner(GPS start, GPS goal);
+        PathPlanner(GPS start, GPS goal, std::vector<float>);
         PathPlanner(GPS min, GPS max, GPS start, GPS goal);
         
         // Destructors
@@ -136,8 +119,8 @@ class PathPlanner {
         double get_hScore(Location& current, Location& goal);
 
         // Path plan
-        // Return cost of found path
-        double planPath(GPS current);
+        // Return trajectory of found path
+        std::vector<int> planPath(GPS current);
 
         // Update cost map
         void initializeCostMap(unsigned int height, unsigned int width);
@@ -165,6 +148,7 @@ class PathPlanner {
         GPS m_gps_current;       // Current GPS coordinate of rover
         GPS m_gps_goal;          // GPS coordinate of goal
         GPS m_currentGoal;       // GPS coordinate of temporary goal for search pattern
+        
         // Array position data
         Location m_current;      // Current Location coordinate of rover
         Location m_goal;         // Location coordinate of goal

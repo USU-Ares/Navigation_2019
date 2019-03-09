@@ -1,15 +1,36 @@
+/*
+Original Authors: 
+  Nicholas Wallace
+  Kaden Archibald
+  Brandon Deakin
+
+ARES Team - Navigation & Autonomy
+https://github.com/USU-Ares/Navigation_2019
+
+Utah State University
+College of Engineering
+
+Description: Implementation of the A* Search algorithm for autonomous path planning.
+Input: The initial and final GPS coordinates formatted as GPS structs (a latitude and longitude in decimal degrees) 
+       and a cost map formatted as a 2D array.
+Output: The ideal trajectory for the path as a series of xy-coordinate waypoints. 
+*/
+
 #include "path_planner.hpp"
-//#include <bits/stdc++.h>
+
 #include <iostream>
 #include <algorithm>
+#include <vector>
 
-PathPlanner::PathPlanner(GPS start, GPS goal) {
+
+PathPlanner::PathPlanner(GPS start, GPS goal, std::vector<float> rawCostMap) {
     // TODO
     // Initialize the start and goal member variables
     m_start = start;
     m_gps_goal = goal;
 
-    // Create cost map
+    // Initialize the raw data for the cost map
+    m_rawCostMap = rawCostMap
 
     std::cout << "Created PathPlanner instance\n";
 }
@@ -30,14 +51,16 @@ PathPlanner::~PathPlanner() {
 }
 
 double PathPlanner::get_fScore(Location current) {
-    // TODO
-    return 0.0;
+    // Get the cost value from the current cell
+    return current.fScore;
 }
+
 // Estimate remaining cost
 double PathPlanner::get_gScore(Location current) {
     // Get distance between current Location and m_goal, returning that distance
     return taxicab(current, m_goal);
 }
+
 /**
  * Return TRUE if hScore is lower than previous hScore and was updated
  */
@@ -60,11 +83,12 @@ bool PathPlanner::get_hScore(Location &current) {
     }
     return false;
 }
+
 double PathPlanner::get_hScore(Location& current, Location& goal) {
     return get_fScore(current) + get_gScore(current);
 }
 
-double PathPlanner::planPath(GPS currentGPS) {
+std::vector<int> PathPlanner::planPath(GPS currentGPS) {
     // Get current coordinate on the grid
     Location currentLocation = getBoardIndex(currentGPS);
 
@@ -78,9 +102,10 @@ double PathPlanner::planPath(GPS currentGPS) {
     currentLocation.fScore = get_fScore(currentLocation);
     openSet.push_back(currentLocation);
 
-    // Loop until our open set is not empty
+    // Loop until our open set is empty
     Location currentNode;
     Location goalNode = getBoardIndex(m_gps_goal);
+
     while (openSet.size() > 0) {
         // Get lowest cost item from openSet
         currentNode = getMin(openSet);
@@ -88,7 +113,24 @@ double PathPlanner::planPath(GPS currentGPS) {
         // Check if we have reached the goal
         if (currentNode.x == goalNode.x && currentNode.y == goalNode.y) {
             // TODO
+            // Complete March 9, not tested
             // Construct path
+
+            std::vector<int> endPath;
+
+            Location* trackingPtr = &currentNode;
+            while (trackingPtr != nullptr)
+            {
+                // Get current location position
+                std::vector<int> pathPos = {trackingPtr->x, trackingPtr->y};
+                endPath.push_back(pathPos)
+
+                // Move to the next location
+                trackingPtr = trackingPtr->prev
+            }
+
+            // Return the path 
+            return endPath;
         }
 
         // Remove current from openSet, and add to closedSet
@@ -119,8 +161,6 @@ double PathPlanner::planPath(GPS currentGPS) {
 
         }
     }
-
-    return 0;
 }
 
 void PathPlanner::initializeCostMap(unsigned int height, unsigned int width) {
