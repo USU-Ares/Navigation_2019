@@ -29,7 +29,8 @@ PathPlanner::PathPlanner(GPS start, GPS goal, std::vector<float> rawCostMap) {
     m_start = start;
     m_gps_goal = goal;
 
-    // Initialize the raw data for the cost map
+    // Initialize the raw data for the cost map, which is the 2d field of gradients. This will
+    // be converted into an actual cost map of Location objects below. 
     m_rawCostMap = rawCostMap
 
     std::cout << "Created PathPlanner instance\n";
@@ -66,7 +67,7 @@ double PathPlanner::get_gScore(Location current) {
  */
 bool PathPlanner::get_hScore(Location &current) {
     // Get partial scores
-    double newFScore = get_fScore(current);
+    double newFScore = get_fScore(current); 
     double newGScore = get_gScore(current);
 
     // If scores are lower than current score, replace them
@@ -87,6 +88,8 @@ bool PathPlanner::get_hScore(Location &current) {
 double PathPlanner::get_hScore(Location& current, Location& goal) {
     return get_fScore(current) + get_gScore(current);
 }
+
+
 
 std::vector<int> PathPlanner::planPath(GPS currentGPS) {
     // Get current coordinate on the grid
@@ -114,7 +117,7 @@ std::vector<int> PathPlanner::planPath(GPS currentGPS) {
         if (currentNode.x == goalNode.x && currentNode.y == goalNode.y) {
             // TODO
             // Complete March 9, not tested
-            // Construct path
+            // Reconstruct path
 
             std::vector<int> endPath;
 
@@ -141,7 +144,32 @@ std::vector<int> PathPlanner::planPath(GPS currentGPS) {
         std::vector<Location> neighbors = getNeighbors(currentNode);
 
         for (int i=0; i<neighbors.size(); i++) {
-            // Check if neighbor is in closed set
+            // Check if neighbor is not in the closed set, and analyze the nodes that are not.
+            if (!inSet(closedSet, neighbors[i]))
+            {
+                // Distance from start to neighbor
+                double temp_gScore = currentNode.gScore + taxicab(currentNode, neighbors[i]);
+
+                // Check if neighbor not in openSet
+                if (!inSet(openSet, neighbors[i])) 
+                {
+                    // Store current node as the previous location
+                    neighbors[i].prev = &currentNode;
+
+                    // Save the f, g, and h scores
+                    neighbors[i].gScore = temp_gScore;
+                    neighbors[i].hScore = get_hScore(currentNode, goalNode);
+                    neighbors[i].fScore = temp_gScore + neighbors[i].hScore;
+
+                    // If better than previous, add to set
+                    openSet.push_back(neighbors[i]);
+                }
+            }
+
+
+
+            /* Old version, made more sense without the continue;
+
             if (inSet(closedSet, neighbors[i])) {
                 continue;
             }
@@ -151,17 +179,19 @@ std::vector<int> PathPlanner::planPath(GPS currentGPS) {
 
             // Check if neighbor not in openSet
             if (!inSet(openSet, neighbors[i])) {
+                // Store current node as the previous location
                 neighbors[i].prev = &currentNode;
                 neighbors[i].gScore = temp_gScore;
                 neighbors[i].hScore = get_hScore(currentNode, goalNode);
                 neighbors[i].fScore = temp_gScore + neighbors[i].hScore;
                 openSet.push_back(neighbors[i]);
-            }
-            // If better than previous, add to set
+            } */
+            
 
         }
     }
 }
+
 
 void PathPlanner::initializeCostMap(unsigned int height, unsigned int width) {
     m_height = height;
@@ -220,9 +250,10 @@ void PathPlanner::removeMin(std::vector<Location> &set) {
     // Find and remove the Location with minimum f score from the open set
 	
 	int minIndex = 0;
-	Location min = set[minIndex];
+	//Location min = set[minIndex];
 	for (int i = 0; i < set.size(); i++)
 	{
+        // Standard linear scan
 		if (set[i].fScore < min.fScore)
 		{
 			minIndex = i; 
@@ -239,10 +270,19 @@ bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
 }
 
 std::vector<Location> PathPlanner::getNeighbors(const Location &node) {
-    // Return the north, south, east, and west neighbors of the current Location node
+    // Return the north, east, south and west neighbors of the current Location node
 	
-	// TODO The structure containing the locations must be implemented first. 
+	// TODO The structure containing the locations must be implemented first.
+    // Completed March 17, not yet tested 
 	std::vector<Location> neighbors;
+
+    // Assume a 2D array and access the four neighbors. Assume that the cost map will contain 
+    // location objects, and that these location objects are located in the array according
+    // to there x and y member variables. 
+    neighbors.push_back(m_costMap[node.x][node.y+1])
+    neighbors.push_back(m_costMap[node.x+1][node.y])
+    neighbors.push_back(m_costMap[node.x][node.y-1])
+    neighbors.push_back(m_costMap[node.x-1][node.y])
 
     return neighbors;
 }

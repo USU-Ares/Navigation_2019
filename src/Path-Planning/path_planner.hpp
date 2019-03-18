@@ -90,15 +90,6 @@ struct Location {
     }
 };
 
-/**
- * Enum to keep track of direction to go in map
- */
-enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
-};
 
 /**
  * Class to return the trajectory for the rover along a path given a destination GPS coordinate
