@@ -22,6 +22,15 @@ Output: The ideal trajectory for the path as a series of xy-coordinate waypoints
 #include <algorithm>
 #include <vector>
 
+/*
+** Notes
+** 1: A path planner instance will be created with the start and ending GPS coordinates,
+** but a raw cost map will need to be sent in many times. Should the raw cost map be changed 
+** so that it no longer is a parameter for the sonstructor? Is that what the second constructor
+** is for?
+**
+** 2: Still need to integrate this with ROS. rawCostMap will be found with a ROS subscriber node. 
+*/
 
 PathPlanner::PathPlanner(GPS start, GPS goal, std::vector<std::vector<double>> rawCostMap) {
     // Initialize the start and goal member variables
@@ -166,29 +175,6 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS) {
                     openSet.push_back(neighbors[i]);
                 }
             }
-
-
-
-            /* Old version, made more sense without the continue;
-
-            if (inSet(closedSet, neighbors[i])) {
-                continue;
-            }
-
-            // Distance from start to neighbor
-            double temp_gScore = currentNode.gScore + taxicab(currentNode, neighbors[i]);
-
-            // Check if neighbor not in openSet
-            if (!inSet(openSet, neighbors[i])) {
-                // Store current node as the previous location
-                neighbors[i].prev = &currentNode;
-                neighbors[i].gScore = temp_gScore;
-                neighbors[i].hScore = get_hScore(currentNode, goalNode);
-                neighbors[i].fScore = temp_gScore + neighbors[i].hScore;
-                openSet.push_back(neighbors[i]);
-            } */
-            
-
         }
     }
 }
