@@ -2,7 +2,6 @@
 #include <iostream>
 #include <vector>
 
-
 using namespace std;
 
 int main(void)
@@ -20,18 +19,17 @@ int main(void)
   };
   
   GPS startGPS(0.0, 0.0);
-  GPS endGPS(1.0, 1.0);
-  std::cout << "start: "; startGPS.print();
-  std::cout << "end: "; endGPS.print();
+  GPS endGPS  (7.19457e-8, 7.19457e-8);
+  //GPS goalGPS (0.0, 0.0000719457);
   GPS currentGPS = startGPS;
   
   cout << "hello" << endl;
   PathPlanner testPath(startGPS, endGPS, gradientMap);
   cout << "hello" << endl;
-  std::vector<std::vector<int>> endPath = testPath.planPath(currentGPS, endGPS);
+  std::cout << "start: "; startGPS.print();
+  std::cout << "end: "  ;   endGPS.print();
+  std::vector<std::vector<int>> endPath = testPath.planPath(startGPS, endGPS);
   cout << "endPath: " << endPath.size() << endl;
-  
-  
   
   for (int i = 0; i < endPath.size(); i++)
   {
@@ -41,8 +39,6 @@ int main(void)
     }
     cout << endl;
   }
-  
-  
   
   return 0;
 }

@@ -7,6 +7,8 @@
 #include <cstdlib>
 #include <string>
 
+#include <iostream>
+
 const double pi = acos(-1);
 
 /**
@@ -15,45 +17,36 @@ const double pi = acos(-1);
 struct GPS {
     double lat; /// Stores latitude in degrees
     double lon; /// Stores longitude in degrees
-    
+
     GPS() {
         lat = 0.0;
         lon = 0.0;
     }
-    
+
     GPS(double latitude, double longitude) {
+        printf("GPS: lat: %.14f\t lon: %.14f\n", latitude, longitude);
         // Input should always be in degrees, convert to radians for processing
         lat = degToRad(latitude);
         lon = degToRad(longitude);
+        printf("GPS: lat: %.14f\t lon: %.14f\n", lat, lon);
     }
-    
-/*     std::string print()
-    {
-      std::string s = "";
-      s += "lat: ";
-      s += lat;
-      s += ", ";
-      s += "lon: ";
-      s += lon;
-      
-      return s;
-    } */
+
     void print() {
-      printf("Lat: %f, Lon: %f\n",lat,lon);
+        printf("Lat: %.14f, Lon: %.14f\n",lat,lon);
     }
-    
+
     double degToRad(double angle)
     {
         // Convert degrees to radians
         return angle*(pi/180);   
     }
-    
+
     double operator-(GPS rhs) {
         // Calculate distance to GPS point
-        
+
         // Radius of Earth, in meters
         const double earthRadius = 6371e3;
-        
+
         // Apply haversine function
         double haversine = hav(rhs.lat - lat) + cos(lat) * cos(rhs.lat) * hav(lon - rhs.lon);
         return 2 * earthRadius * asin(sqrt(haversine));
@@ -61,33 +54,34 @@ struct GPS {
 
     bool operator==(const GPS &rhs) const {
         double temp = abs(this->lat - rhs.lat) + abs(this->lon - rhs.lon);
-        return temp < 0.0000005;
+        return temp < 1e-20;
     }
-    
-    GPS operator=(const GPS &rhs) const 
+
+    GPS operator=(const GPS &rhs) 
     {
-      GPS temp(rhs.lat, rhs.lon);
-      return temp;
+        lat = rhs.lat;
+        lon = rhs.lon;
+        return *this;
     }
-    
+
     // Haversine function
     double hav(double angle) {
         return 0.5 - cos(angle)*0.5;
     }
-    
+
     // Calculate the x and y difference
     double calcXDiff(GPS newGPS)
     {
-      GPS temp = newGPS;
-      temp.lon = this->lon;
-      return (*this - temp);
+        GPS temp = newGPS;
+        temp.lon = this->lon;
+        return (*this - temp);
     }
-    
+
     double calcYDiff(GPS newGPS)
     {
-      GPS temp = newGPS;
-      temp.lat = this->lat;
-      return (*this - temp);
+        GPS temp = newGPS;
+        temp.lat = this->lat;
+        return (*this - temp);
     }
 };
 
@@ -95,37 +89,63 @@ struct GPS {
  * Struct to keep track of positions
  */
 struct Location {
-    GPS gps;
-    double fScore;
-    double gScore;
-    double hScore;
+    GPS m_gps;
+    double totalScore;
+    double gradientScore;
+    double heuristicScore;
     double m_cost;
     Location* prev;
     Location() {
         Location(0);
     }
+    Location(GPS gps_point) {
+        totalScore     = std::numeric_limits<double>::max();
+        gradientScore  = std::numeric_limits<double>::max();
+        heuristicScore = std::numeric_limits<double>::max();
+        m_cost = 0;
+        prev = nullptr;
+        std::cout << "Pre assign Location: "; m_gps.print();
+        //m_gps = GPS(gps_point.lat, gps_point.lon);
+        m_gps = gps_point;
+        std::cout << "Post assign Location: "; m_gps.print();
+        std::cout << "Passed Location: "; gps_point.print();
+    }
     Location(double cost) {
-        fScore = std::numeric_limits<double>::max();
-        gScore = std::numeric_limits<double>::max();
-        hScore = std::numeric_limits<double>::max();
+        totalScore     = std::numeric_limits<double>::max();
+        gradientScore  = std::numeric_limits<double>::max();
+        heuristicScore = std::numeric_limits<double>::max();
         m_cost = cost;
         prev = nullptr;
     }
+    Location(double cost, double lat, double lon) {
+        totalScore     = std::numeric_limits<double>::max();
+        gradientScore  = std::numeric_limits<double>::max();
+        heuristicScore = std::numeric_limits<double>::max();
+        m_cost = 0;
+        prev = nullptr;
+        std::cout << "Pre assign Location: "; m_gps.print();
+        m_gps = GPS(lat, lon);
+        std::cout << "Post assign Location: "; m_gps.print();
+    }
     bool operator>(const Location &rhs) const {
-        return this->fScore > rhs.fScore;
+        return this->totalScore > rhs.totalScore;
     }
     bool operator==(const Location &rhs) const {
-        return this->gps == rhs.gps;
+        return this->m_gps == rhs.m_gps;
     }
     Location operator=(const Location &rhs) const {
         // Does not copy prev pointer
-        Location temp = Location();
-        temp.gps    = rhs.gps;
-        temp.fScore = rhs.fScore;
-        temp.gScore = rhs.gScore;
-        temp.hScore = rhs.hScore;
-        temp.m_cost = rhs.m_cost;
-        return temp;
+        /*Location temp = Location();
+        temp.m_gps    = rhs.m_gps;
+        temp.totalScore    = rhs.totalScore;
+        temp.gradientScore = rhs.gradientScore;
+        temp.heuristicScore = rhs.heuristicScore;
+        temp.m_cost = rhs.m_cost;*/
+        return rhs;
+    }
+    void print() {
+        m_gps.print();
+        printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
     }
 };
 
@@ -139,14 +159,14 @@ class PathPlanner {
         //PathPlanner();
         PathPlanner(GPS start, GPS goal, std::vector<std::vector<double>> rawCostMap);
         PathPlanner(GPS min, GPS max, GPS start, GPS goal);
-        
+
         // Destructors
         ~PathPlanner();
 
         // Heuristics
         // Helper functions to calculate scores
-        bool get_hScore(Location &current);
-        double get_hScore(Location& current, Location& goal);
+        bool calculate_totalScore(Location &current);
+        //double get_totalScore(Location& current);
 
         // Path plan
         // Return trajectory of found path
@@ -175,7 +195,7 @@ class PathPlanner {
         GPS m_gps_current;       // Current GPS coordinate of rover
         GPS m_gps_goal;          // GPS coordinate of goal
         GPS m_currentGoal;       // GPS coordinate of temporary goal for search pattern
-        
+
         // Array position data
         Location m_current;      // Current Location coordinate of rover
         Location m_goal;         // Location coordinate of goal
@@ -193,14 +213,14 @@ class PathPlanner {
 
         // Helper functions
         Location getMin(std::vector<Location> &set);
-        void removeMin(std::vector<Location> &set);
+        std::vector<Location> removeMin(std::vector<Location> set);
         bool inSet(std::vector<Location> &set, Location &entry);
-        std::vector<Location> getNeighbors(const Location &node);
+        std::vector<Location> getNeighbors(Location &node);
         unsigned taxicab(Location start, Location end);
 
         // Scorers
-        double get_fScore(Location current);
-        double get_gScore(Location current);
+        double get_gradientScore(Location current);
+        double get_heuristicScore(Location current);
 };
 
 #endif
