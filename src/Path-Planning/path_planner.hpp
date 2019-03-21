@@ -5,6 +5,7 @@
 #include <limits>
 #include <math.h>
 #include <cstdlib>
+#include <string>
 
 const double pi = acos(-1);
 
@@ -24,6 +25,21 @@ struct GPS {
         // Input should always be in degrees, convert to radians for processing
         lat = degToRad(latitude);
         lon = degToRad(longitude);
+    }
+    
+/*     std::string print()
+    {
+      std::string s = "";
+      s += "lat: ";
+      s += lat;
+      s += ", ";
+      s += "lon: ";
+      s += lon;
+      
+      return s;
+    } */
+    void print() {
+      printf("Lat: %f, Lon: %f\n",lat,lon);
     }
     
     double degToRad(double angle)
@@ -46,6 +62,12 @@ struct GPS {
     bool operator==(const GPS &rhs) const {
         double temp = abs(this->lat - rhs.lat) + abs(this->lon - rhs.lon);
         return temp < 0.0000005;
+    }
+    
+    GPS operator=(const GPS &rhs) const 
+    {
+      GPS temp(rhs.lat, rhs.lon);
+      return temp;
     }
     
     // Haversine function
@@ -128,7 +150,7 @@ class PathPlanner {
 
         // Path plan
         // Return trajectory of found path
-        std::vector<std::vector<int>> planPath(GPS current);
+        std::vector<std::vector<int>> planPath(GPS current, GPS goal);
 
         // Update cost map
         void setCostMap(std::vector<std::vector<double>> costMap);
