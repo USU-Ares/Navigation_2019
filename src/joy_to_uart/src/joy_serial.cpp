@@ -3,6 +3,8 @@
 #include <wiringPi.h>
 #include <iostream>
 #include <std_msgs/UInt8MultiArray.h> 
+#include <math.h>
+#include <serial/serial.h>
 
 using namespace std;
 
@@ -51,18 +53,12 @@ void Subsc::NavMsg(const sensor_msgs::UInt8MultiArray::ConstPtr& msg_1){
 
 void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
  Subsc ss;
- uint8_t serial_array[14];
- uint8_t pid_1 = 'C';
- uint8_t pid_2 = 'G';
+ uint8_t serial_array[13];
+ uint8_t pid_1 = 'G';
+ uint8_t pid_2 = 'O';
  uint8_t pid_3 = 0;
  uint8_t Data_Array_Size = 8;  // Number of array members that makes up the data being transmitted. 
 
- uint8_t crc = 8*9;
-  		
-/* crc is the ending value for the serial array to let the controller know the max amount of data bytes that are coming in. The 8 represents how many bits there are in a byte and the 9 is the number of byte data members in the serial array. For every 255 bits of data another byte has to be added to crc.*/
-
- crc = crc/255;
- crc = crc + 1;
 
  serial_array[0] = pid_1;
  serial_array[1] = pid_2;
@@ -72,12 +68,10 @@ void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
  int j = 4;
  
  for (int i = 0; i < 6; i++) {
-  
-    if (i == 0){
-      
+
+    if (i == 0){   
       serial_array[j] = drive;
       j++;   
- 
     }
  
     else if (i == 1){
@@ -86,12 +80,19 @@ void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
     serial_array[j] = message[i-2];
   }
   
- serial_array[13] = crc; 
+ uint8_t crc = 0;
+
+ for (k=3;k<12;k++){
+   for (m=0;m<8;m++){
+     crc += (serial_array[k]>>m)&0x01;  //Checks all the data values in the serial_array for 1 bits using "shift"
+   }
+  }
+ 
+ serial_array[12] = crc;
   
  }
  
 
-}
 
 int main (){
 
@@ -126,7 +127,7 @@ int main (){
       ros::Subscriber joy_in = n.subscribe("joy", 1, s.drive_Button);
       
       if (s.button_x_tel == 0) {
-        ros::Subscriber Nav_msg = n.subscribe("joy_nav_values",1,
+        ros::Subscriber Nav_msg = n.subscribe("joy_nav_values",1,s.NavMsg());
         
         ros::Rate rate(20)
         while (ros::ok()) {
@@ -137,17 +138,13 @@ int main (){
            rate.sleep();
    
         }
-         
-
       }
 
       else if (s.button_x_tel == 1) {
       
 	 
       }
-
    }
-
  }
 
 
