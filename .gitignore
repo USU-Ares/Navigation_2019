@@ -2,3 +2,7 @@
 *.out
 *.exe
 *.obj
+*/bin/
+*/dep/
+*/obj/
+*/.vscode/

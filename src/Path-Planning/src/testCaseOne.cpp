@@ -4,7 +4,7 @@
 
 using namespace std;
 
-int main(void)
+void testCaseOne()
 {
   // Find the data
   vector<vector<double>> gradientMap = { 
@@ -39,6 +39,10 @@ int main(void)
     }
     cout << endl;
   }
-  
-  return 0;
+}
+
+int main() {
+    testCaseOne();
+
+    return 0;
 }
