@@ -61,7 +61,7 @@ struct GPS {
     {
         lat = rhs.lat;
         lon = rhs.lon;
-        return *this;
+        return rhs;
     }
 
     // Haversine function
@@ -95,11 +95,14 @@ struct Location {
     double heuristicScore;
     double m_cost;
     Location* prev;
-    Location() {
-        Location(0);
+    Location():
+        Location(0, 0, 0)
+    {
     }
-    Location(GPS gps_point) {
-        totalScore     = std::numeric_limits<double>::max();
+    Location(GPS gps_point):
+        Location(0, gps_point)
+    {
+        /*totalScore     = std::numeric_limits<double>::max();
         gradientScore  = std::numeric_limits<double>::max();
         heuristicScore = std::numeric_limits<double>::max();
         m_cost = 0;
@@ -109,31 +112,45 @@ struct Location {
         m_gps = gps_point;
         std::cout << "Post assign Location: "; m_gps.print();
         std::cout << "Passed Location: "; gps_point.print();
+        */
     }
-    Location(double cost) {
+    Location(double cost):
+        Location(cost, 0, 0)
+    {
+        /*
         totalScore     = std::numeric_limits<double>::max();
         gradientScore  = std::numeric_limits<double>::max();
         heuristicScore = std::numeric_limits<double>::max();
         m_cost = cost;
         prev = nullptr;
+        */
     }
-    Location(double cost, double lat, double lon) {
+    Location(double cost, double lat, double lon):
+        Location(cost, GPS(lat, lon))
+    {
+    }
+    Location(double cost, GPS point)
+    {
         totalScore     = std::numeric_limits<double>::max();
         gradientScore  = std::numeric_limits<double>::max();
         heuristicScore = std::numeric_limits<double>::max();
         m_cost = 0;
         prev = nullptr;
         std::cout << "Pre assign Location: "; m_gps.print();
-        m_gps = GPS(lat, lon);
+        //m_gps = GPS(lat, lon);
+        m_gps = point;
         std::cout << "Post assign Location: "; m_gps.print();
     }
     bool operator>(const Location &rhs) const {
         return this->totalScore > rhs.totalScore;
     }
+    bool operator<(const Location &rhs) const {
+        return this->totalScore < rhs.totalScore;
+    }
     bool operator==(const Location &rhs) const {
         return this->m_gps == rhs.m_gps;
     }
-    Location operator=(const Location &rhs) const {
+    Location operator=(const Location &rhs) {
         // Does not copy prev pointer
         /*Location temp = Location();
         temp.m_gps    = rhs.m_gps;
@@ -141,11 +158,17 @@ struct Location {
         temp.gradientScore = rhs.gradientScore;
         temp.heuristicScore = rhs.heuristicScore;
         temp.m_cost = rhs.m_cost;*/
+        m_gps = rhs.m_gps;
+        totalScore = rhs.totalScore;
+        gradientScore = rhs.gradientScore;
+        heuristicScore = rhs.heuristicScore;
+        m_cost = rhs.m_cost;
         return rhs;
     }
     void print() {
         m_gps.print();
-        printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
+        //printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
+        printf("cost: %f\n",m_cost);
     }
 };
 
@@ -215,7 +238,7 @@ class PathPlanner {
         Location getMin(std::vector<Location> &set);
         std::vector<Location> removeMin(std::vector<Location> set);
         bool inSet(std::vector<Location> &set, Location &entry);
-        std::vector<Location> getNeighbors(Location &node);
+        std::vector<Location> getNeighbors(Location node);
         unsigned taxicab(Location start, Location end);
 
         // Scorers

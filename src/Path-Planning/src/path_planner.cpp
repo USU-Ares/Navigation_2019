@@ -104,16 +104,16 @@ bool PathPlanner::calculate_totalScore(Location &current) {
 std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
     // Get current coordinate on the grid
     Location startLocation = getLocation(currentGPS);
-    Location goalNode    = getLocation(goal);
+    Location goalNode      = getLocation(goal);
 
-    //std::cout << "***** current GPS\n";
-    //currentGPS.print();
-    //std::cout << "***** goal GPS\n";
-    //goal.print();
-    //std::cout << "***** Current node\n";
-    //startLocation.print();
-    //std::cout << "***** Goal node\n";
-    //goalNode.print();
+    std::cout << "***** current GPS\n";
+    currentGPS.print();
+    std::cout << "***** goal GPS\n";
+    goal.print();
+    std::cout << "***** Current node\n";
+    startLocation.print();
+    std::cout << "***** Goal node\n";
+    goalNode.print();
 
     // Sets of nodes that have been visited or to be checked
     std::vector<Location> closedSet;
@@ -126,6 +126,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 
     // Loop until our open set is empty
     while (openSet.size() > 0) {
+        std::cout << "About to sleep\n";
         sleep(1);
         std::cout << "Open set Size: " << openSet.size() << "\n";
         for (int i=0; i<openSet.size(); i++) {
@@ -146,6 +147,10 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 
         // Check if we have reached the goal
         if (currentLocation == goalNode) {
+            std::cout << "current was equal to goalNode\n";
+            currentLocation.print();
+            goalNode.print();
+            std::cout << "&&&&&&\n";
             // Complete March 9, not tested
             // Reconstruct path
 
@@ -177,10 +182,20 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
         std::cout << "Calling remove min\n";
         openSet = removeMin(openSet); // TODO Change openSet to be a min heap
         std::cout << "done with remove min\tSize: " << openSet.size() << "\n";
+        for (int i=0; i<openSet.size(); i++) {
+            std::cout << "  ";
+            openSet[i].print();
+        }
+
         closedSet.push_back(currentLocation);
 
         // Check each neighbor of currentLocation
         std::vector<Location> neighbors = getNeighbors(currentLocation);
+        std::cout << "Neighbors of current: " << neighbors.size() << "\n";
+        for (int i=0; i<neighbors.size(); i++) {
+            std::cout << "  ";
+            neighbors[i].print();
+        }
 
         for (int i=0; i<neighbors.size(); i++) {
             // Check if neighbor is not in the closed set, and analyze the nodes that are not.
@@ -189,6 +204,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                 std::cout << "not in closed set, so doing the loop\n"; neighbors[i].print();
                 // Distance from start to neighbor
                 double temp_gradientScore = currentLocation.gradientScore + taxicab(currentLocation, neighbors[i]);
+                std::cout << "temp_gradientScore: " << temp_gradientScore << "\n";
                 
                 // If our neighbor is not in the openSet, push to openSet
                 if (!inSet(openSet, neighbors[i])) {
@@ -207,25 +223,29 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                     // Linear probe to find previous occurance of neighbor
                     for (int j=0; j<openSet.size(); j++) {
                         // We found it!
-                        if (openSet[j] == neighbors[i]) {
+                        if (openSet[j] == neighbors[i] && openSet[j] < neighbors[j]) {
                             openSet.erase(openSet.begin() + j);
+                            // Insert new neighbor into openSet
+
+                            // Update scores
+                            neighbors[i].gradientScore = temp_gradientScore;
+                            neighbors[i].heuristicScore = get_heuristicScore(neighbors[i]);
+                            calculate_totalScore(neighbors[i]);
+                            // Push neighbor to openSet
+                            openSet.push_back(neighbors[i]);
+
+                            std::cout << "already in OpenSet\n";
                             break;
                         }
                     }
-                    // Insert new neighbor into openSet
-
-                    // Update scores
-                    neighbors[i].gradientScore = temp_gradientScore;
-                    neighbors[i].heuristicScore = get_heuristicScore(neighbors[i]);
-                    calculate_totalScore(neighbors[i]);
-                    // Push neighbor to openSet
-                    openSet.push_back(neighbors[i]);
-
-                    std::cout << "already in OpenSet\n";
                 }
+
+                std::cout << "Done with this iteration of neighbor\n";
             }
         } // End neighbor checking
+        std::cout << "Done with neighbor checking\n";
     }
+    std::cout << "How did you get here?\n";
 }
 
 void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
@@ -342,7 +362,7 @@ bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
     //return std::find(set.begin(), set.end(), entry) != set.end();
 }
 
-std::vector<Location> PathPlanner::getNeighbors(Location &node) {
+std::vector<Location> PathPlanner::getNeighbors(Location node) {
     // Return the north, east, south and west neighbors of the current Location node
 	
     // Completed March 17, not yet tested 
