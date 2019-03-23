@@ -9,44 +9,42 @@
 using namespace std;
 // Output Indices 
 #define LEFT_JOY 	0 // The left joystick value will be assigned in the first position in the joystick output array.
-#define RIGHT_JOY	1 // The right joystick value
+#define RIGHT_JOY	1
 
 // Global Variable
 std_msgs::UInt8MultiArray joyoutput;
 std_msgs::MultiArrayDimension joyoutput_specs;
-unsigned char message_sending[6];          //The array data for the joysticks will be saved in this array and then saved to "data" in joyoutput.
+unsigned char message_sending[6];
 
 void joystickSaver(const sensor_msgs::Joy::ConstPtr& joy){
   float left_joy = joy -> axes[1]; 
   float right_joy = joy -> axes[4];
   unsigned char l_j;
   unsigned char r_j;
-  
-/* When the joystick is pulled backward for reverse, the saved joystick values will range from 1 to 127.
-   if the joystick is pushed forward the values will range from 128 to 255. When joysticks are at rest 
-   a value of 0 will be saved.
-*/
+
+
   if (left_joy < 0){
-    l_j = 128 - 127*abs(left_joy);
+    l_j = 127 - 127*abs(left_joy);
   }
   else if (left_joy > 0){
     l_j = 127 + 127*abs(left_joy);
     l_j = l_j + 1;
   } 
   else {
-    l_j = 0;
+    l_j = 127;
   }
 
  if (right_joy < 0){
-    r_j = 128 - 127*abs(right_joy);
+    r_j = 127 - 127*abs(right_joy);
   }
   else if (right_joy > 0){
     r_j = 127 + 127*abs(right_joy);
     r_j = r_j + 1;
   } 
   else {
-    r_j = 0;
+    r_j = 127;
   }
+ 
 
   message_sending[LEFT_JOY] = l_j;
   message_sending[RIGHT_JOY] = r_j;
@@ -68,8 +66,8 @@ int main(int argc, char **argv){
 
   ros::Rate rate(20);
   while (ros::ok()) {
-      joyoutput_specs.label = "nav_msg";    // array label name that is given to UInt8MultiArray
-      joyoutput_specs.size = 6;             // Lets UInt8MultiArray know how many members are going into its data array.
+      joyoutput_specs.label = "nav_msg";
+      joyoutput_specs.size = 6;
       joyoutput.layout.dim.clear();
       joyoutput.layout.dim.push_back(joyoutput_specs);
 
