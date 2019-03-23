@@ -5,12 +5,13 @@
 #include <std_msgs/UInt8MultiArray.h> 
 #include <math.h>
 #include <serial/serial.h>
+#include <stdint.h>
 
 using namespace std;
 
-//define toggle switche and LED light pins on raspberry pi 3B+ GPIO
-#define TOGGLE_DRIVE_MAN    0 	// Toggle ~ toggle switch to switch between manipulation and drive control
-#define TOGGLE_AUTO_TEL    2
+//define toggle switches and LED light pins on raspberry pi 3B+ GPIO
+#define TOGGLE_DRIVE_MAN    0 	// Toggle switch to switch between manipulation and drive control
+#define TOGGLE_AUTO_TEL     2   // Toggle switch to switch between autonomous and teleoperation driving modes
 #define MAN_LED      3  // LED light to signal Manipulation mode
 #define TEL_LED      4  // LED light to signal Teleoperation
 #define AUTO_LED     5  // LED light to signal Autonomous mode
@@ -18,17 +19,20 @@ using namespace std;
 
    
 
-
+/* Subsc contains two functions that subscribe to the ROS topics "joy_nav_values" and "man_values". The values from the ROS topic messages are saved to the serial data . */
 class Subsc
 { public:
   
-  void NavMsg();
-  void ManMsg():
-  uint8_t Nav_msg[6];   //Stored array values from nav message to go to "serial()".
-  uint8_t Man_msg[6];
+  uint8_t Nav_msg[6];   //Stored array values from navigation's joystick values.
+  uint8_t Man_msg[6];   //Stored array values from manipulations joystick values
+
+
+  void NavMsg(const std_msgs::UInt8MultiArray::ConstPtr& msg_1);        
+  void ManMsg(const std_msgs::UInt8MultiArray::ConstPtr& msg_2);
+  
   
 
-}
+};
 
 
 
@@ -40,18 +44,22 @@ class Subsc
 
 
 
-void Subsc::NavMsg(const sensor_msgs::UInt8MultiArray::ConstPtr& msg_1){
- this->Nav_msg = msg_1->data;      // [3]
+void Subsc::NavMsg(const std_msgs::UInt8MultiArray::ConstPtr& msg_1){
+ for (int ii=0;ii<6;ii++){
+   this->Nav_msg[ii] = msg_1->data[ii];      // [3]
+ }
 }
 
-void Subsc::ManMsg(const sensor_msgs::UInt8MultiArray::ConstPtr& msg_2){
- this->Man_msg = msg_2->data;
+void Subsc::ManMsg(const std_msgs::UInt8MultiArray::ConstPtr& msg_2){
+ for (int jj=0;jj<6;jj++){
+   this->Man_msg[jj] = msg_2->data[jj];
+ }
 }
 
 
 
 
-void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
+void serial_fun(uint8_t message,uint8_t drive, uint8_t auto_teleops) {
  Subsc ss;
  uint8_t serial_array[13];
  uint8_t pid_1 = 'G';
@@ -63,7 +71,7 @@ void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
  serial_array[0] = pid_1;
  serial_array[1] = pid_2;
  serial_array[2] = pid_3;
- serial_array[3] = Serial_Array_Size;
+ serial_array[3] = Data_Array_Size;
 
  int j = 4;
  
@@ -76,14 +84,15 @@ void serial(uint8_t message[6],uint8_t drive, uint8_t auto_teleops) {
  
     else if (i == 1){
       serial_array[j] = auto_teleops;
+      j++;
     }
     serial_array[j] = message[i-2];
   }
   
  uint8_t crc = 0;
 
- for (k=3;k<12;k++){
-   for (m=0;m<8;m++){
+ for (int k=3;k<12;k++){
+   for (int m=0;m<8;m++){
      crc += (serial_array[k]>>m)&0x01;  //Checks all the data values in the serial_array for 1 bits using "shift"
    }
   }
@@ -131,7 +140,7 @@ int main (){
       ros::Rate rate(20)
       while (ros::ok()) {
            
-           serial(s.Man_msg, Drive_Man, Auto_Tel);
+           serial_fun(s.Man_msg, Drive_Man, Auto_Tel);
 
            ros::spinOnce();
            rate.sleep();
