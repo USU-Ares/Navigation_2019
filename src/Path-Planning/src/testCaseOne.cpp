@@ -20,13 +20,12 @@ void testCaseOne()
 
     GPS startGPS(0.0, 0.0);
     GPS endGPS (7.19457e-5, 7.19457e-5);
-    //GPS endGPS  (7.19457e-8, 7.19457e-8);
-    //GPS goalGPS (0.0, 0.0000719457);
     GPS currentGPS = startGPS;
 
 
     PathPlanner testPath(startGPS, endGPS, gradientMap);
 
+    std::cout << "Test Path Parameters...\n";
     std::cout << "start: "; startGPS.print();
     std::cout << "end: "  ;   endGPS.print();
     std::vector<std::vector<int>> endPath = testPath.planPath(startGPS, endGPS);

@@ -54,7 +54,21 @@ struct GPS {
 
     bool operator==(const GPS &rhs) const {
         double temp = abs(this->lat - rhs.lat) + abs(this->lon - rhs.lon);
-        return temp < 1e-20;
+        std::cout << "hehe XD\n";
+        //return temp < 1e-7;
+
+        double tol = 1e-16;
+        if (temp < tol)
+        {
+          std::cout << "temp: " << temp << std::endl;
+          std::cout << "lat: " << this->lat << " and " << rhs.lat << std::endl;
+          std::cout << "lon: " << this->lon << " and " << rhs.lon << std::endl;
+          return true;
+        }
+        else
+        {
+          return false;
+        }
     }
 
     GPS operator=(const GPS &rhs)

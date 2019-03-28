@@ -28,6 +28,10 @@ Output: The ideal trajectory for the path as a series of xy-coordinate waypoints
 ** Notes
 **
 ** Still need to integrate this with ROS. rawCostMap will be found with a ROS subscriber node.
+** Check the equality operator for Location struct.
+** Check why the GPS coordinates change when the goal GPS is loaded into a Location struct.
+**   Original goal coor is 1.25568935e-6 rad, but when loaded into a Location object the coor is changed
+**   to 1.917642e-8.
 */
 
 PathPlanner::PathPlanner(GPS min, GPS max, std::vector<std::vector<double>> rawCostMap) :
@@ -63,6 +67,7 @@ PathPlanner::~PathPlanner() {
 
 double PathPlanner::get_gradientScore(Location current) {
     // Get the cost value from the current cell
+
     return current.gradientScore;
 }
 
@@ -130,20 +135,23 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
             std::cout << "  ";
             //openSet[i].print();
         }
+        
         std::cout << "Closed set size: " << closedSet.size() << "\n";
         for (int i=0; i<closedSet.size(); i++) {
             std::cout << "  ";
             //closedSet[i].print();
         }
+
         // Get lowest cost item from openSet
         Location currentLocation = getMin(openSet);
         std::cout << "Min from open: ";
         currentLocation.print();
         std::cout << "Returned value: "; getMin(openSet);
         std::cout << "\n";
-
         // Check if we have reached the goal
+
         if (currentLocation == goalNode) {
+
             std::cout << "current was equal to goalNode\n";
             currentLocation.print();
             goalNode.print();
@@ -262,7 +270,7 @@ void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
     for (int i=0; i<rawCostMap.size(); i++) {
         std::vector<Location> locationLine = std::vector<Location>();
         for (int j=0; j<rawCostMap[i].size(); j++) {
-            std::cout << "i, j: " << i << " " << j << std::endl;
+            //std::cout << "i, j: " << i << " " << j << std::endl;
             locationLine.push_back(Location(rawCostMap[i][j], delta_lat*i, delta_lon*j));
         }
         m_costMap.push_back(locationLine);
