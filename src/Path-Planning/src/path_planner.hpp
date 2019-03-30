@@ -24,11 +24,11 @@ struct GPS {
     }
 
     GPS(double latitude, double longitude) {
-        printf("GPS: lat: %.14f\t lon: %.14f\n", latitude, longitude);
+        //printf("GPS: lat: %.14f\t lon: %.14f\n", latitude, longitude);
         // Input should always be in degrees, convert to radians for processing
         lat = degToRad(latitude);
         lon = degToRad(longitude);
-        printf("GPS: lat: %.14f\t lon: %.14f\n", lat, lon);
+        //printf("GPS: lat: %.14f\t lon: %.14f\n", lat, lon);
     }
 
     void print() {
@@ -38,7 +38,7 @@ struct GPS {
     double degToRad(double angle)
     {
         // Convert degrees to radians
-        return angle*(pi/180);   
+        return angle*(pi/180);
     }
 
     double operator-(GPS rhs) {
@@ -54,10 +54,24 @@ struct GPS {
 
     bool operator==(const GPS &rhs) const {
         double temp = abs(this->lat - rhs.lat) + abs(this->lon - rhs.lon);
-        return temp < 1e-20;
+        std::cout << "hehe XD\n";
+        //return temp < 1e-7;
+
+        double tol = 1e-16;
+        if (temp < tol)
+        {
+          std::cout << "temp: " << temp << std::endl;
+          std::cout << "lat: " << this->lat << " and " << rhs.lat << std::endl;
+          std::cout << "lon: " << this->lon << " and " << rhs.lon << std::endl;
+          return true;
+        }
+        else
+        {
+          return false;
+        }
     }
 
-    GPS operator=(const GPS &rhs) 
+    GPS operator=(const GPS &rhs)
     {
         lat = rhs.lat;
         lon = rhs.lon;
@@ -136,10 +150,10 @@ struct Location {
         heuristicScore = std::numeric_limits<double>::max();
         m_cost = 0;
         prev = nullptr;
-        std::cout << "Pre assign Location: "; m_gps.print();
+        //std::cout << "Pre assign Location: "; m_gps.print();
         //m_gps = GPS(lat, lon);
         m_gps = point;
-        std::cout << "Post assign Location: "; m_gps.print();
+        //std::cout << "Post assign Location: "; m_gps.print();
     }
     bool operator>(const Location &rhs) const {
         return this->totalScore > rhs.totalScore;
@@ -166,6 +180,7 @@ struct Location {
         return rhs;
     }
     void print() {
+      printf("Location printing...\n");
         m_gps.print();
         //printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
         printf("cost: %f\n",m_cost);
