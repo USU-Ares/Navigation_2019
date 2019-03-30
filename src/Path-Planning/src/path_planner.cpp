@@ -34,28 +34,31 @@ Output: The ideal trajectory for the path as a series of xy-coordinate waypoints
 **   to 1.917642e-8.
 */
 
-PathPlanner::PathPlanner(GPS min, GPS max, std::vector<std::vector<double>> rawCostMap) :
-  m_min (min),
-  m_max (max)
+PathPlanner::PathPlanner(GPS start, GPS goal, std::vector<std::vector<double>> rawCostMap) :
+    m_start(start),
+    m_goal(goal)
 {
     // Initialize the start and goal member variables
 
-    //std::cout << "c min: "; m_min.print();
-    //std::cout << "c max: "; m_max.print();
+    // Set min and max GPS values
+    m_min.lat = (start.lat < goal.lat) ? start.lat : goal.lat ;
+    m_min.lon = (start.lon < goal.lon) ? start.lon : goal.lon ;
+    m_max.lat = (start.lat > goal.lat) ? start.lat : goal.lat ;
+    m_max.lon = (start.lon > goal.lon) ? start.lon : goal.lon ;
 
     // Initialize the raw data for the cost map, which is the 2d field of gradients. This will
     // be converted into an actual cost map of Location objects below.
-    std::vector<std::vector<double>> m_costMap;
     setCostMap(rawCostMap);
 
     std::cout << "Created PathPlanner instance\n";
 }
+/*
 PathPlanner::PathPlanner(GPS min, GPS max, GPS start, GPS goal) {
     m_min = min;
     m_max = max;
     m_start = start;
-    m_gps_goal = goal;
 }
+*/
 
 PathPlanner::~PathPlanner() {
     //std::cout << "Destructing object\n";
@@ -68,13 +71,13 @@ PathPlanner::~PathPlanner() {
 double PathPlanner::get_gradientScore(Location current) {
     // Get the cost value from the current cell
 
-    return current.gradientScore;
+    return current.getGradientScore();
 }
 
 // Estimate remaining cost
 double PathPlanner::get_heuristicScore(Location current) {
     // Get distance between current Location and m_goal, returning that distance
-    return taxicab(current, m_goal);
+    return current.getHeuristicScore();
 }
 
 /**
@@ -87,20 +90,32 @@ bool PathPlanner::calculate_totalScore(Location &current) {
     double newTotal = newGradient + newHeuristic;
 
     // If total score is lower, update
-    if (newTotal < current.totalScore) {
-        current.totalScore = newTotal;
-        current.heuristicScore = newHeuristic;
-        current.gradientScore = newGradient;
+    if (newTotal < current.getTotalScore()) {
+        current.setHeuristicScore(newHeuristic);
+        current.setGradientScore(newGradient);
+        current.setTotalScore();
         return true;
     }
     return false;
 }
-
-/*double PathPlanner::get_totalScore(Location& current) {
-    return current.totalScore;
+bool PathPlanner::calculate_gradientScore(Location &target, Location &current) {
+    double oldGradient = target.getGradientScore();
+    double newGradient = current.getGradientScore() + target.getCost();
+    if (newGradient < oldGradient) {
+        current.setGradientScore( newGradient );
+        return true;
+    }
+    return false;
 }
-*/
-
+bool PathPlanner::calculate_heuristicScore(Location &current) {
+    double oldHeuristic = current.getHeuristicScore();
+    double newHeuristic = taxicab(current, m_currentGoal);
+    if (newHeuristic < oldHeuristic) {
+        current.setHeuristicScore( newHeuristic );
+        return true;
+    }
+    return false;
+}
 
 
 std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
@@ -122,8 +137,8 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
     std::vector<Location> openSet;
 
     // Inital condition
-    startLocation.gradientScore = 0;
-    startLocation.totalScore = calculate_totalScore(startLocation);
+    startLocation.setGradientScore(0);
+    calculate_totalScore(startLocation);
     openSet.push_back(startLocation);
 
     // Loop until our open set is empty
@@ -170,11 +185,11 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                 getBoardIndex(trackingPtr, &x, &y);
 
                 // Add location to path vector
-                std::vector<int> pathPos {x,y};
+                std::vector<int> pathPos {y,x};
                 endPath.push_back(pathPos);
 
                 // Move to the next location
-                trackingPtr = trackingPtr->prev;
+                trackingPtr = trackingPtr->getPrev();
             }
 
             // Return the path
@@ -185,7 +200,8 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 
         // Remove current from openSet, and add to closedSet
         std::cout << "Calling remove min\n";
-        openSet = removeMin(openSet); // TODO Change openSet to be a min heap
+        //openSet = removeMin(openSet); // TODO Change openSet to be a min heap
+        removeMin(openSet);
         std::cout << "done with remove min\tSize: " << openSet.size() << "\n";
         for (int i=0; i<openSet.size(); i++) {
             std::cout << "  ";
@@ -208,14 +224,14 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
             {
                 std::cout << "not in closed set, so doing the loop\n"; neighbors[i].print();
                 // Distance from start to neighbor
-                double temp_gradientScore = currentLocation.gradientScore + taxicab(currentLocation, neighbors[i]);
+                double temp_gradientScore = currentLocation.getGradientScore() + taxicab(currentLocation, neighbors[i]);
                 std::cout << "temp_gradientScore: " << temp_gradientScore << "\n";
 
                 // If our neighbor is not in the openSet, push to openSet
                 if (!inSet(openSet, neighbors[i])) {
                     // Update scores
-                    neighbors[i].gradientScore = temp_gradientScore;
-                    neighbors[i].heuristicScore = get_heuristicScore(neighbors[i]);
+                    neighbors[i].setGradientScore(temp_gradientScore);
+                    neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
                     calculate_totalScore(neighbors[i]);
                     // Push neighbor to openSet
                     openSet.push_back(neighbors[i]);
@@ -228,13 +244,13 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                     // Linear probe to find previous occurance of neighbor
                     for (int j=0; j<openSet.size(); j++) {
                         // We found it!
-                        if (openSet[j] == neighbors[i] && openSet[j] < neighbors[j]) {
+                        if (openSet[j] == neighbors[i] && openSet[j] < neighbors[i]) {
                             openSet.erase(openSet.begin() + j);
                             // Insert new neighbor into openSet
 
                             // Update scores
-                            neighbors[i].gradientScore = temp_gradientScore;
-                            neighbors[i].heuristicScore = get_heuristicScore(neighbors[i]);
+                            neighbors[i].setGradientScore(temp_gradientScore);
+                            neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
                             calculate_totalScore(neighbors[i]);
                             // Push neighbor to openSet
                             openSet.push_back(neighbors[i]);
@@ -253,10 +269,11 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
     std::cout << "How did you get here?\n";
 }
 
+// Row major
 void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
     // Loop through raw cost map, and create final cost map using getBoardIndex
-    double delta_lat = (m_max.lat-m_min.lat) / rawCostMap[0].size();
-    double delta_lon = (m_max.lon-m_min.lon) / rawCostMap.size();
+    double delta_lat = (m_max.lat-m_min.lat) / rawCostMap.size();
+    double delta_lon = (m_max.lon-m_min.lon) / rawCostMap[0].size();
 
     /*
     std::cout << "Raw cost map[0] size: " << rawCostMap[0].size() << std::endl;
@@ -267,52 +284,50 @@ void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
     std::cout << "Delta lon: " << delta_lon << "\n";
     */
 
-    for (int i=0; i<rawCostMap.size(); i++) {
-        std::vector<Location> locationLine = std::vector<Location>();
-        for (int j=0; j<rawCostMap[i].size(); j++) {
+    m_costMap = std::vector<std::vector<Location>>();
+
+    for (int y=0; y<rawCostMap.size(); y++) {
+        std::vector<Location> locationRow = std::vector<Location>();
+        for (int x=0; x<rawCostMap[y].size(); x++) {
             //std::cout << "i, j: " << i << " " << j << std::endl;
-            locationLine.push_back(Location(rawCostMap[i][j], delta_lat*i, delta_lon*j));
+            //locationRow.push_back(Location(rawCostMap[y][x], delta_lat*y, delta_lon*x));
+            locationRow.push_back( Location( GPS(delta_lat*y, delta_lon*x), rawCostMap[y][x] ) );
         }
-        m_costMap.push_back(locationLine);
+        m_costMap.push_back(locationRow);
     }
-    m_rawCostMap = rawCostMap;
 }
 
 Location& PathPlanner::getLocation(GPS point) {
-    Location temp = Location(point);
-
     int x = -1,
         y = -1;
     std::cout<<"AAA\n";
-    getBoardIndex(&temp, &x, &y);
+    getBoardIndex(&point, &x, &y);
 
+    std::cout << "X: " << x << "\tY: " << y << "\n";
     return m_costMap[x][y];
 }
-void PathPlanner::getBoardIndex(const Location* loc, int* p_x, int* p_y) {
-    // Assign loc to temp variable so compiler doesn't get mad
-    GPS temp = loc->m_gps;
-
+void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
     // Get proportion of GPS latitude between min and max latitude
-    double lat_proportion = ((double)(temp.lat - m_min.lat))/(m_max.lat - m_min.lat);
+    double lat_proportion = ((double)(loc->lat - m_min.lat))/(m_max.lat - m_min.lat);
     // Get proportion of GPS longitude between min and max longitude
-    double lon_proportion = ((double)(temp.lon - m_min.lon))/(m_max.lon - m_min.lon);
+    double lon_proportion = ((double)(loc->lon - m_min.lon))/(m_max.lon - m_min.lon);
 
     // Set x from latitute proportion
-    *p_x = (int)(lat_proportion * (m_costMap[0].size()-1) );
+    *p_x = (int)(lon_proportion * (m_costMap[0].size()-1) );
     // Set y from longitude proportion
-    *p_y = (int)(lon_proportion * (m_costMap.size()-1) );
+    *p_y = (int)(lat_proportion * (m_costMap.size()-1) );
 
-    /*std::cout << "temp-m_min: " << (temp-m_min) << "\n";
-    std::cout << "m_max-m_min: " << (m_max-m_min) << "\n";
-    std::cout << "Lat p: " << lat_proportion << "\n";
-    std::cout << "Lon p: " << lon_proportion << "\n";
-    std::cout << "Temp: "; temp.print();
-    std::cout << "Max: "; m_max.print();
-    std::cout << "Min: "; m_min.print();
-    std::cout << "\n";
-    */
+    std::cout << "Get board index debug\n";
+    std::cout << "loc: " << loc->lat << "\t" << loc->lon << "\n";
+    std::cout << "min: " << m_min.lat << "\t" << m_min.lon << "\n";
+    std::cout << "max: " << m_max.lat << "\t" << m_max.lon << "\n";
+    std::cout << "Lat prop: " << lat_proportion << "\n";
+    std::cout << "Lon prop: " << lon_proportion << "\n";
+    std::cout << "m_costMap[0].size()-1: " << m_costMap[0].size()-1 << "\n";
+    std::cout << "m_costMap.size()-1: " << m_costMap.size()-1 << "\n";
 }
 
+/*
 void PathPlanner::updatePartOfCostMap(std::vector<std::vector<double>> &costMap, int x_offset, int y_offset) {
     for (int i=0; i<costMap.size(); i++) {
         for (int j=0; j<costMap[i].size(); j++) {
@@ -320,15 +335,16 @@ void PathPlanner::updatePartOfCostMap(std::vector<std::vector<double>> &costMap,
         }
     }
 }
-Location PathPlanner::getMin(std::vector<Location> &set) {
+*/
+Location PathPlanner::getMin(std::vector<Location> &vec) {
     // Find the Location with the lowest total score from the open set
 
-	Location min = set[0];
-	for (int i = 0; i < set.size(); i++)
+	Location min = vec[0];
+	for (int i = 0; i < vec.size(); i++)
 	{
-		if (set[i].totalScore < min.totalScore)
+		if (vec[i].getTotalScore() < min.getTotalScore())
 		{
-			min = set[i];
+			min = vec[i];
 		}
 	}
 
@@ -337,23 +353,24 @@ Location PathPlanner::getMin(std::vector<Location> &set) {
 
     return min;
 }
-std::vector<Location> PathPlanner::removeMin(std::vector<Location> set) {
+//std::vector<Location> PathPlanner::removeMin(std::vector<Location> vec) {
+void PathPlanner::removeMin(std::vector<Location> &vec) {
     // Find and remove the Location with minimum f score from the open set
 
 	int minIndex = 0;
-	for (int i = 0; i < set.size(); i++)
+	for (int i = 0; i < vec.size(); i++)
 	{
         // Standard linear scan
-		if (set[i].totalScore < set[minIndex].totalScore)
+		if (vec[i].getTotalScore() < vec[minIndex].getTotalScore())
 		{
 			minIndex = i;
 		}
 	}
 
     //std::cout << "removeMin index: " << minIndex << "\tsize before erase: " << set.size() << "\n";
-	  set.erase(set.begin() + minIndex);
+    vec.erase(vec.begin() + minIndex);
     //std::cout << "size after erase: " << set.size() << "\n";
-    return set;
+    //return vec;
 }
 
 bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
@@ -372,7 +389,7 @@ bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
     //return std::find(set.begin(), set.end(), entry) != set.end();
 }
 
-std::vector<Location> PathPlanner::getNeighbors(Location node) {
+std::vector<Location> PathPlanner::getNeighbors(Location &node) {
     // Return the north, east, south and west neighbors of the current Location node
 
     // Completed March 17, not yet tested
@@ -386,23 +403,23 @@ std::vector<Location> PathPlanner::getNeighbors(Location node) {
     std::cout<<"BBB\n";
     getBoardIndex(&node, &x, &y);
     std::cout << "getNeighbors of X: " << x << "\tY: " << y << "\n";
-    if (y < m_costMap[0].size()) {
-        neighbors.push_back(m_costMap[x  ][y+1]);
+    if (y < m_costMap.size()-1) {
+        neighbors.push_back(m_costMap[y+1][x  ]);
     }
-    if (x < m_costMap.size()) {
-        neighbors.push_back(m_costMap[x+1][y  ]);
+    if (x < m_costMap[0].size()-1) {
+        neighbors.push_back(m_costMap[y  ][x+1]);
     }
     if (y > 0) {
-        neighbors.push_back(m_costMap[x  ][y-1]);
+        neighbors.push_back(m_costMap[y-1][x  ]);
     }
     if (x > 0) {
-        neighbors.push_back(m_costMap[x-1][y  ]);
+        neighbors.push_back(m_costMap[y  ][x-1]);
     }
 
     return neighbors;
 }
 
-unsigned PathPlanner::taxicab(Location start, Location end) {
+double PathPlanner::taxicab(GPS start, GPS end) {
     int x_1, y_1;
     int x_2, y_2;
     //std::cout<<"CCC\n";
