@@ -15,6 +15,7 @@ using namespace std;
 #define MAN_LED      3  // LED light to signal Manipulation mode
 #define TEL_LED      4  // LED light to signal Teleoperation
 #define AUTO_LED     5  // LED light to signal Autonomous mode
+// pin layout rbi 3B+ [https://pi4j.com/1.2/pins/model-3b-plus-rev1.html]
 
 
    
@@ -112,8 +113,8 @@ int main (int argc, char **argv){
 
  for (;;) 
  {
-  Drive_Man = digitalRead8(TOGGLE_DRIVE_MAN);   // Ref [2]
-  Auto_Tel = digitalRead8(TOGGLE_AUTO_TEL);
+  Drive_Man = digitalRead(TOGGLE_DRIVE_MAN);   // Ref [2]
+  Auto_Tel = digitalRead(TOGGLE_AUTO_TEL);
   
   if (Auto_Tel==1){
       digitalWrite(AUTO_LED,HIGH);
