@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(joy_to_uart)
+project(joymessages_to_uart)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -7,11 +7,14 @@ project(joy_to_uart)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  serial
 )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -104,7 +107,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES joy_to_uart
+  LIBRARIES joymessages_to_uart
   CATKIN_DEPENDS roscpp rospy std_msgs
   DEPENDS system_lib
 )
@@ -116,13 +119,14 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
- include
+  include
   ${catkin_INCLUDE_DIRS}
+ # /home/matthew/wiringPi/wiringPi/wiringPi.so
 )
 
 ## Declare a C++ library
-# add_library(${PROJECT_NAME}
-#   src/${PROJECT_NAME}/joy_to_uart.cpp
+# find_library(WIRINGPI
+#   /home/matthew/wiringPi/wiringPi/wiringPi.so.2.50
 # )
 
 ## Add cmake target dependencies of the library
@@ -133,7 +137,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
- add_executable(${PROJECT_NAME}_node src/joy_reciever.cpp)
+add_executable(${PROJECT_NAME}_node src/joy_receiver.cpp)
+add_executable(joy_serial_node src/joy_serial.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -146,9 +151,14 @@ include_directories(
 # add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
- target_link_libraries(${PROJECT_NAME}_node
+target_link_libraries(${PROJECT_NAME}_node
    ${catkin_LIBRARIES}
  )
+target_link_libraries(joy_serial_node
+   ${catkin_LIBRARIES}
+   wiringPi
+ )
+add_definitions(-std=c++0x -L/home/matthew/wiringPi/wiringPi -lwiringPi)
 
 #############
 ## Install ##
@@ -190,10 +200,16 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_joy_to_uart.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_joymessages_to_uart.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+#############
+##Examples##
+#############
+# [1] https://answers.ros.org/question/221046/can-i-use-wiringpi-on-ros-indigo/
+# [2] https://github.com/ATLFlight/ros-examples/blob/master/CMakeLists.txt
