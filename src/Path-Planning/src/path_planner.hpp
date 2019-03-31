@@ -171,6 +171,9 @@ class Location : public GPS {
         void setHeuristicScore(double score) {
             heuristicScore = score;
         }
+        void setPrev(Location* prev) {
+            this->prev = prev;
+        }
 
         // Cleanup
         void cleanup() {
@@ -205,7 +208,7 @@ class PathPlanner {
 
         // Heuristics
         // Helper functions to calculate scores
-        bool calculate_totalScore(Location &current);
+        bool calculate_totalScore(Location &current, Location &neighbor);
         bool calculate_gradientScore(Location &target, Location &current);
         bool calculate_heuristicScore(Location &current);
 

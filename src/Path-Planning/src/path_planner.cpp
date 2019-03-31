@@ -36,7 +36,8 @@ Output: The ideal trajectory for the path as a series of xy-coordinate waypoints
 
 PathPlanner::PathPlanner(GPS start, GPS goal, std::vector<std::vector<double>> rawCostMap) :
     m_start(start),
-    m_goal(goal)
+    m_goal(goal),
+    m_currentGoal(goal)
 {
     // Initialize the start and goal member variables
 
@@ -83,10 +84,10 @@ double PathPlanner::get_heuristicScore(Location current) {
 /**
  * Return TRUE if heuristicScore is lower than previous hScore and was updated
  */
-bool PathPlanner::calculate_totalScore(Location &current) {
+bool PathPlanner::calculate_totalScore(Location &current, Location &neighbor) {
     // Get partial scores
-    double newGradient  = get_gradientScore(current);
-    double newHeuristic = get_heuristicScore(current);
+    double newGradient  = calculate_gradientScore(current, neighbor);
+    double newHeuristic = calculate_heuristicScore(current);
     double newTotal = newGradient + newHeuristic;
 
     // If total score is lower, update
@@ -103,6 +104,7 @@ bool PathPlanner::calculate_gradientScore(Location &target, Location &current) {
     double newGradient = current.getGradientScore() + target.getCost();
     if (newGradient < oldGradient) {
         current.setGradientScore( newGradient );
+        target.setPrev(&current);
         return true;
     }
     return false;
@@ -138,13 +140,13 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 
     // Inital condition
     startLocation.setGradientScore(0);
-    calculate_totalScore(startLocation);
+    startLocation.setTotalScore(0);
     openSet.push_back(startLocation);
 
     // Loop until our open set is empty
     while (openSet.size() > 0) {
         std::cout << "About to sleep\n";
-        sleep(1);
+        //sleep(1);
         std::cout << "Open set Size: " << openSet.size() << "\n";
         for (int i=0; i<openSet.size(); i++) {
             std::cout << "  ";
@@ -237,7 +239,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                     // Update scores
                     neighbors[i].setGradientScore(temp_gradientScore);
                     neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
-                    calculate_totalScore(neighbors[i]);
+                    calculate_totalScore(currentLocation, neighbors[i]);
                     // Push neighbor to openSet
                     openSet.push_back(neighbors[i]);
 
@@ -256,7 +258,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                             // Update scores
                             neighbors[i].setGradientScore(temp_gradientScore);
                             neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
-                            calculate_totalScore(neighbors[i]);
+                            calculate_totalScore(currentLocation, neighbors[i]);
                             // Push neighbor to openSet
                             openSet.push_back(neighbors[i]);
 
