@@ -22,11 +22,16 @@ class GPS {
 
         GPS() : GPS(-1.0,-1.0) {}
 
-        GPS(double latitude, double longitude) {
+        GPS(double latitude, double longitude, bool isDegrees=true) {
             //printf("GPS: lat: %.14f\t lon: %.14f\n", latitude, longitude);
             // Input should always be in degrees, convert to radians for processing
-            lat = degToRad(latitude);
-            lon = degToRad(longitude);
+            if (isDegrees) {
+                lat = degToRad(latitude);
+                lon = degToRad(longitude);
+            } else {
+                lat = latitude;
+                lon = longitude;
+            }
             //printf("GPS: lat: %.14f\t lon: %.14f\n", lat, lon);
         }
 
@@ -142,7 +147,7 @@ class Location : public GPS {
             printf("Location printing...\n  ");
             //((GPS)*this).print();
             printf("Lat: %.14f, Lon: %.14f\n",lat,lon);
-            printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
+            //printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
             printf("  cost: %f\n",m_cost);
         }
 

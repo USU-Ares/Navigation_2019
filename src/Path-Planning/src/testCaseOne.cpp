@@ -119,7 +119,7 @@ void testCaseOne()
 }
 
 int main() {
-#if 0
+#if 1
     testCaseOne();
 #else
     //testCaseTwo();

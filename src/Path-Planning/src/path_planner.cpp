@@ -212,6 +212,9 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 
         closedSet.push_back(currentLocation);
 
+        std::cout << "\t\tCurrentLocation after delete\n";
+        currentLocation.print();
+        std::cout << "\t\t*******\n";
         // Check each neighbor of currentLocation
         std::vector<Location> neighbors = getNeighbors(currentLocation);
         std::cout << "Neighbors of current: " << neighbors.size() << "\n";
@@ -277,6 +280,9 @@ void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
     double delta_lat = (m_max.lat-m_min.lat) / rawCostMap.size();
     double delta_lon = (m_max.lon-m_min.lon) / rawCostMap[0].size();
 
+    //std::cout << "Delta latitute: " << delta_lat << "\n";
+    //std::cout << "Delta longitude: " << delta_lon << "\n";
+
     /*
     std::cout << "Raw cost map[0] size: " << rawCostMap[0].size() << std::endl;
     std::cout << "Raw cost map    size: " << rawCostMap.size() << std::endl;
@@ -293,7 +299,7 @@ void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
         for (int x=0; x<rawCostMap[y].size(); x++) {
             //std::cout << "i, j: " << i << " " << j << std::endl;
             //locationRow.push_back(Location(rawCostMap[y][x], delta_lat*y, delta_lon*x));
-            locationRow.push_back( Location( GPS(delta_lat*y, delta_lon*x), rawCostMap[y][x] ) );
+            locationRow.push_back( Location( GPS(delta_lat*y, delta_lon*x, false), rawCostMap[y][x] ) );
         }
         m_costMap.push_back(locationRow);
     }
@@ -324,6 +330,8 @@ void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
     std::cout << "loc: " << loc->lat << "\t" << loc->lon << "\n";
     std::cout << "min: " << m_min.lat << "\t" << m_min.lon << "\n";
     std::cout << "max: " << m_max.lat << "\t" << m_max.lon << "\n";
+    std::cout << "loc->lat   - m_min.lat: " << (loc->lat - m_min.lat) << "\n";
+    std::cout << "m_max->lat - m_min.lat: " << (m_max.lat - m_min.lat) << "\n";
     std::cout << "Lat prop: " << lat_proportion << "\n";
     std::cout << "Lon prop: " << lon_proportion << "\n";
     std::cout << "m_costMap[0].size()-1: " << m_costMap[0].size()-1 << "\n";
@@ -405,6 +413,7 @@ std::vector<Location> PathPlanner::getNeighbors(Location &node) {
     int x = -1;
     int y = -1;
     std::cout<<"BBB\n";
+    node.print();
     getBoardIndex(&node, &x, &y);
     std::cout << "getNeighbors of X: " << x << "\tY: " << y << "\n";
     if (y < m_costMap.size()-1) {
