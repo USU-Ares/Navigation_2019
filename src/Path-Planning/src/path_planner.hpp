@@ -20,7 +20,7 @@ class GPS {
         double lat; /// Stores latitude in radians
         double lon; /// Stores longitude in radians
 
-        GPS() : GPS(0.0,0.0) {}
+        GPS() : GPS(-1.0,-1.0) {}
 
         GPS(double latitude, double longitude) {
             //printf("GPS: lat: %.14f\t lon: %.14f\n", latitude, longitude);
@@ -96,7 +96,8 @@ class GPS {
 class Location : public GPS {
     public:
         // Constructors
-        Location(GPS point, double cost)
+        Location(GPS point, double cost) :
+            GPS(point)
         {
             totalScore     = std::numeric_limits<double>::max();
             gradientScore  = std::numeric_limits<double>::max();
@@ -128,7 +129,9 @@ class Location : public GPS {
               temp.gradientScore = rhs.gradientScore;
               temp.heuristicScore = rhs.heuristicScore;
               temp.m_cost = rhs.m_cost;*/
-            (GPS)*this = (GPS)rhs;
+            //(GPS)*this = (GPS)rhs;
+            lat = rhs.lat;
+            lon = rhs.lon;
             totalScore = rhs.totalScore;
             gradientScore = rhs.gradientScore;
             heuristicScore = rhs.heuristicScore;
@@ -136,10 +139,11 @@ class Location : public GPS {
             return rhs;
         }
         void print() {
-            printf("Location printing...\n");
-            this->GPS::print();
-            //printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
-            printf("cost: %f\n",m_cost);
+            printf("Location printing...\n  ");
+            //((GPS)*this).print();
+            printf("Lat: %.14f, Lon: %.14f\n",lat,lon);
+            printf("total: %10f\tgradient: %10f\theuristic: %10f\tcost: %10f\n", totalScore, gradientScore, heuristicScore, m_cost);
+            printf("  cost: %f\n",m_cost);
         }
 
         // Accessors
@@ -152,6 +156,9 @@ class Location : public GPS {
         // Modifiers
         void setTotalScore() {
             totalScore = getGradientScore() + getHeuristicScore();
+        }
+        void setTotalScore(double testing) {
+            totalScore = testing;
         }
         void setGradientScore(double score) {
             gradientScore = score;
@@ -242,12 +249,13 @@ class PathPlanner {
         double hWeight;
 
         // Helper functions
-        Location getMin(std::vector<Location> &vec);
-        //std::vector<Location> removeMin(std::vector<Location> set);
-        void removeMin(std::vector<Location> &vec);
-        bool inSet(std::vector<Location> &set, Location &entry);
         std::vector<Location> getNeighbors(Location &node);
         double taxicab(GPS start, GPS end);
 };
+
+Location getMin(std::vector<Location> &vec);
+//std::vector<Location> removeMin(std::vector<Location> set);
+void removeMin(std::vector<Location> &vec);
+bool inSet(std::vector<Location> &set, Location &entry);
 
 #endif

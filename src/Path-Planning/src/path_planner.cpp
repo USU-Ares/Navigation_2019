@@ -148,13 +148,13 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
         std::cout << "Open set Size: " << openSet.size() << "\n";
         for (int i=0; i<openSet.size(); i++) {
             std::cout << "  ";
-            //openSet[i].print();
+            openSet[i].print();
         }
         
         std::cout << "Closed set size: " << closedSet.size() << "\n";
         for (int i=0; i<closedSet.size(); i++) {
             std::cout << "  ";
-            //closedSet[i].print();
+            closedSet[i].print();
         }
 
         // Get lowest cost item from openSet
@@ -199,6 +199,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
         std::cout << "was not the goal node\n";
 
         // Remove current from openSet, and add to closedSet
+        std::cout << "*************\n";
         std::cout << "Calling remove min\n";
         //openSet = removeMin(openSet); // TODO Change openSet to be a min heap
         removeMin(openSet);
@@ -207,6 +208,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
             std::cout << "  ";
             openSet[i].print();
         }
+        std::cout << "*************\n";
 
         closedSet.push_back(currentLocation);
 
@@ -224,7 +226,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
             {
                 std::cout << "not in closed set, so doing the loop\n"; neighbors[i].print();
                 // Distance from start to neighbor
-                double temp_gradientScore = currentLocation.getGradientScore() + taxicab(currentLocation, neighbors[i]);
+                double temp_gradientScore = currentLocation.getGradientScore() + neighbors[i].getCost();
                 std::cout << "temp_gradientScore: " << temp_gradientScore << "\n";
 
                 // If our neighbor is not in the openSet, push to openSet
@@ -317,6 +319,7 @@ void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
     // Set y from longitude proportion
     *p_y = (int)(lat_proportion * (m_costMap.size()-1) );
 
+#if 0
     std::cout << "Get board index debug\n";
     std::cout << "loc: " << loc->lat << "\t" << loc->lon << "\n";
     std::cout << "min: " << m_min.lat << "\t" << m_min.lon << "\n";
@@ -325,6 +328,7 @@ void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
     std::cout << "Lon prop: " << lon_proportion << "\n";
     std::cout << "m_costMap[0].size()-1: " << m_costMap[0].size()-1 << "\n";
     std::cout << "m_costMap.size()-1: " << m_costMap.size()-1 << "\n";
+#endif
 }
 
 /*
@@ -336,7 +340,7 @@ void PathPlanner::updatePartOfCostMap(std::vector<std::vector<double>> &costMap,
     }
 }
 */
-Location PathPlanner::getMin(std::vector<Location> &vec) {
+Location getMin(std::vector<Location> &vec) {
     // Find the Location with the lowest total score from the open set
 
 	Location min = vec[0];
@@ -354,11 +358,11 @@ Location PathPlanner::getMin(std::vector<Location> &vec) {
     return min;
 }
 //std::vector<Location> PathPlanner::removeMin(std::vector<Location> vec) {
-void PathPlanner::removeMin(std::vector<Location> &vec) {
+void removeMin(std::vector<Location> &vec) {
     // Find and remove the Location with minimum f score from the open set
 
 	int minIndex = 0;
-	for (int i = 0; i < vec.size(); i++)
+	for (int i = 1; i < vec.size(); i++)
 	{
         // Standard linear scan
 		if (vec[i].getTotalScore() < vec[minIndex].getTotalScore())
@@ -373,7 +377,7 @@ void PathPlanner::removeMin(std::vector<Location> &vec) {
     //return vec;
 }
 
-bool PathPlanner::inSet(std::vector<Location> &set, Location& entry) {
+bool inSet(std::vector<Location> &set, Location& entry) {
     for (int i=0; i<set.size(); i++) {
         if (set[i] == entry) {
             /*
