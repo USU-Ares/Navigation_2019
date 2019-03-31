@@ -120,8 +120,8 @@ class Location : public GPS {
         bool operator<(const Location &rhs) const {
             return this->totalScore < rhs.totalScore;
         }
-        bool operator==(const Location &rhs) const {
-            return ((GPS)*this) == ((GPS)rhs);
+        bool operator==(const GPS &rhs) const {
+            return ((GPS)*this) == rhs;
         }
         bool operator!=(const Location &rhs) const {
             return !(*this == rhs);

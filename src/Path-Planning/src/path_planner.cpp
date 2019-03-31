@@ -241,7 +241,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                     // Push neighbor to openSet
                     openSet.push_back(neighbors[i]);
 
-                    std::cout << "Not in OpenSet\n";
+                    std::cout << "Was not in OpenSet\n";
                 }
                 // If, our neighbor is in the openSet, check if it is a better gradient score
                 // if the gradient score is better, remove old Node and push new neighbor
@@ -277,8 +277,8 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
 // Row major
 void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
     // Loop through raw cost map, and create final cost map using getBoardIndex
-    double delta_lat = (m_max.lat-m_min.lat) / rawCostMap.size();
-    double delta_lon = (m_max.lon-m_min.lon) / rawCostMap[0].size();
+    double delta_lat = (m_max.lat-m_min.lat) / (rawCostMap.size()-1);
+    double delta_lon = (m_max.lon-m_min.lon) / (rawCostMap[0].size()-1);
 
     //std::cout << "Delta latitute: " << delta_lat << "\n";
     //std::cout << "Delta longitude: " << delta_lon << "\n";
@@ -299,7 +299,7 @@ void PathPlanner::setCostMap(std::vector<std::vector<double>> rawCostMap) {
         for (int x=0; x<rawCostMap[y].size(); x++) {
             //std::cout << "i, j: " << i << " " << j << std::endl;
             //locationRow.push_back(Location(rawCostMap[y][x], delta_lat*y, delta_lon*x));
-            locationRow.push_back( Location( GPS(delta_lat*y, delta_lon*x, false), rawCostMap[y][x] ) );
+            locationRow.push_back( Location( GPS(m_min.lat + delta_lat*y, m_min.lon + delta_lon*x, false), rawCostMap[y][x] ) );
         }
         m_costMap.push_back(locationRow);
     }
@@ -309,23 +309,27 @@ Location& PathPlanner::getLocation(GPS point) {
     int x = -1,
         y = -1;
     std::cout<<"AAA\n";
+    point.print();
     getBoardIndex(&point, &x, &y);
 
     std::cout << "X: " << x << "\tY: " << y << "\n";
     return m_costMap[x][y];
 }
 void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
+    // This isn't working, but should be used for constant lookup time.
+    // Commenting out to prove that rest of algorithm works, and replacing with linear search
+    /*
     // Get proportion of GPS latitude between min and max latitude
     double lat_proportion = ((double)(loc->lat - m_min.lat))/(m_max.lat - m_min.lat);
     // Get proportion of GPS longitude between min and max longitude
     double lon_proportion = ((double)(loc->lon - m_min.lon))/(m_max.lon - m_min.lon);
 
     // Set x from latitute proportion
-    *p_x = (int)(lon_proportion * (m_costMap[0].size()-1) );
+    *p_x = (int)(lon_proportion * (m_costMap[0].size()) );
     // Set y from longitude proportion
-    *p_y = (int)(lat_proportion * (m_costMap.size()-1) );
+    *p_y = (int)(lat_proportion * (m_costMap.size()) );
 
-#if 0
+#if 1
     std::cout << "Get board index debug\n";
     std::cout << "loc: " << loc->lat << "\t" << loc->lon << "\n";
     std::cout << "min: " << m_min.lat << "\t" << m_min.lon << "\n";
@@ -334,9 +338,20 @@ void PathPlanner::getBoardIndex(const GPS* loc, int* p_x, int* p_y) {
     std::cout << "m_max->lat - m_min.lat: " << (m_max.lat - m_min.lat) << "\n";
     std::cout << "Lat prop: " << lat_proportion << "\n";
     std::cout << "Lon prop: " << lon_proportion << "\n";
-    std::cout << "m_costMap[0].size()-1: " << m_costMap[0].size()-1 << "\n";
-    std::cout << "m_costMap.size()-1: " << m_costMap.size()-1 << "\n";
+    std::cout << "m_costMap[0].size()-1: " << m_costMap[0].size() << "\n";
+    std::cout << "m_costMap.size()-1: " << m_costMap.size() << "\n";
 #endif
+    */
+    for (int i=0; i<m_costMap.size(); i++) {
+        for (int j=0; j<m_costMap[i].size(); j++) {
+            //std::cout << "I: " << i << "\tJ: " << j << "\tlat: " << m_costMap[i][j].lat << "\tlon: " << m_costMap[i][j].lon << "\n";
+            if (m_costMap[i][j] == *loc) {
+                *p_y = i;
+                *p_x = j;
+                return;
+            }
+        }
+    }
 }
 
 /*
