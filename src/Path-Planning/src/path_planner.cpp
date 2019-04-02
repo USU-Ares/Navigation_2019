@@ -84,17 +84,19 @@ double PathPlanner::get_heuristicScore(Location current) {
 /**
  * Return TRUE if heuristicScore is lower than previous hScore and was updated
  */
-bool PathPlanner::calculate_totalScore(Location &current, Location &neighbor) {
+bool PathPlanner::calculate_totalScore(Location *target, Location *current) {
+    std::cout << "Calculating total score\n";
     // Get partial scores
-    double newGradient  = calculate_gradientScore(current, neighbor);
-    double newHeuristic = calculate_heuristicScore(current);
-    double newTotal = newGradient + newHeuristic;
+    bool newGradient  = calculate_gradientScore(*target, *current);
+    bool newHeuristic = calculate_heuristicScore(*current);
+    //double newTotal = newGradient + newHeuristic;
 
     // If total score is lower, update
-    if (newTotal < current.getTotalScore()) {
-        current.setHeuristicScore(newHeuristic);
-        current.setGradientScore(newGradient);
-        current.setTotalScore();
+    if (newGradient || newHeuristic) {
+        //target->setHeuristicScore(newHeuristic);
+        //target->setGradientScore(newGradient);
+        target->setTotalScore();
+        //target->setPrev(current);
         return true;
     }
     return false;
@@ -103,8 +105,7 @@ bool PathPlanner::calculate_gradientScore(Location &target, Location &current) {
     double oldGradient = target.getGradientScore();
     double newGradient = current.getGradientScore() + target.getCost();
     if (newGradient < oldGradient) {
-        current.setGradientScore( newGradient );
-        target.setPrev(&current);
+        target.setGradientScore( newGradient );
         return true;
     }
     return false;
@@ -181,6 +182,7 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
             Location* trackingPtr = &currentLocation;
             while (trackingPtr != nullptr)
             {
+                std::cout << "Tracing path...\n";
                 // Get current location position
                 int x, y;
                 //std::cout << "Calling getBoardIndex\n";
@@ -193,6 +195,18 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                 // Move to the next location
                 trackingPtr = trackingPtr->getPrev();
             }
+            /*
+            Location tracking = currentLocation;
+            while (tracking != startLocation) {
+                std::cout << "Tracing path\n";
+                int x,y;
+                getBoardIndex(&tracking, &x, &y);
+
+                std::vector<int> pathPos {y,x};
+                endPath.push_back(pathPos);
+                tracking = tracking.getObjPrev();
+            }
+            */
 
             // Return the path
             std::cout << "I'm a disapointment of a function!" << std::endl;
@@ -239,7 +253,16 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                     // Update scores
                     neighbors[i].setGradientScore(temp_gradientScore);
                     neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
-                    calculate_totalScore(currentLocation, neighbors[i]);
+                    std::cout << "Calculating total score because not in openset\n";
+
+                    calculate_totalScore(&neighbors[i], &currentLocation);
+                    // Get location in board, and pass that in
+                    putInBoard(neighbors[i]);
+                    int x1, y1;
+                    getBoardIndex(&neighbors[i], &x1, &y1);
+                    currentLocation.setPrev(&m_costMap[y1][x1]);;
+
+                    std::cout << "  Previous is " << neighbors[i].getPrev() << std::endl;
                     // Push neighbor to openSet
                     openSet.push_back(neighbors[i]);
 
@@ -258,7 +281,15 @@ std::vector<std::vector<int>> PathPlanner::planPath(GPS currentGPS, GPS goal) {
                             // Update scores
                             neighbors[i].setGradientScore(temp_gradientScore);
                             neighbors[i].setHeuristicScore(calculate_heuristicScore(neighbors[i]));
-                            calculate_totalScore(currentLocation, neighbors[i]);
+                            std::cout << "Calculating total score because already in openset\n";
+                            if (calculate_totalScore(&neighbors[i], &currentLocation)) {
+                                // Get location in board, and pass that in
+                                putInBoard(neighbors[i]);
+                                int x1, y1;
+                                getBoardIndex(&neighbors[i], &x1, &y1);
+                                currentLocation.setPrev(&m_costMap[y1][x1]);;
+                            }
+                            std::cout << "  Previous is " << neighbors[i].getPrev() << std::endl;
                             // Push neighbor to openSet
                             openSet.push_back(neighbors[i]);
 
@@ -462,4 +493,11 @@ double PathPlanner::taxicab(GPS start, GPS end) {
 
     // Return taxicab distance
     return deltaX + deltaY;
+}
+
+void PathPlanner::putInBoard(Location &loc) {
+    int x,y;
+    getBoardIndex(&loc, &x, &y);
+
+    m_costMap[y][x] = loc;
 }

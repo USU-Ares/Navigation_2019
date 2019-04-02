@@ -99,7 +99,6 @@ void testCaseOne()
     GPS endGPS (7.19457e-5, 7.19457e-5);
     GPS currentGPS = startGPS;
 
-
     PathPlanner testPath(startGPS, endGPS, gradientMap);
 
     std::cout << "Test Path Parameters...\n";

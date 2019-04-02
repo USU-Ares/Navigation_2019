@@ -157,6 +157,7 @@ class Location : public GPS {
         double getHeuristicScore() { return heuristicScore; }
         double getCost() { return m_cost; }
         Location* getPrev() { return prev; }
+        //Location getObjPrev() { return obj_prev; }
 
         // Modifiers
         void setTotalScore() {
@@ -174,6 +175,9 @@ class Location : public GPS {
         void setPrev(Location* prev) {
             this->prev = prev;
         }
+        /*void setPrev(Location prev) {
+            this->obj_prev = prev;
+        }*/
 
         // Cleanup
         void cleanup() {
@@ -190,6 +194,7 @@ class Location : public GPS {
         double m_cost;
 
         Location* prev;
+        //Location obj_prev;
 };
 
 
@@ -208,7 +213,7 @@ class PathPlanner {
 
         // Heuristics
         // Helper functions to calculate scores
-        bool calculate_totalScore(Location &current, Location &neighbor);
+        bool calculate_totalScore(Location *current, Location *neighbor);
         bool calculate_gradientScore(Location &target, Location &current);
         bool calculate_heuristicScore(Location &current);
 
@@ -231,6 +236,7 @@ class PathPlanner {
         double get_totalScore(Location current);
 
         // Modifiers
+        void putInBoard(Location &loc);
 
     private:
         // Store these in radians
