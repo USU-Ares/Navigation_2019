@@ -7,7 +7,7 @@ Utah State University
 College of Engineering
 
 Created: April 1, 2019
-Revised: 
+Revised: April 7, 2019
 Version: IPython 6.2.1 (Anaconda distribution) with Python 3.6.4
 
 Test Cases for A* Search Module
@@ -33,10 +33,10 @@ def radToDeg(angle):
 
 # Generate start/stop GPS points, a cost map (format as matrix of positive 
 # integers), write data to file.
-latSize = 15
-lonSize = 10
+latSize = 25
+lonSize = 25
 nodeSize = 1 # meters
-maxGradient = 100
+maxGradient = 99
 
 costMapFile = 'testCostMap.txt'
 
@@ -48,8 +48,8 @@ def main(*args, **kwargs):
     startGPS = tuple(map(degToRad, startGPS))
     
     
-    # Find goal GPS point. Assume that the bottom lef corner is the start and the top right
-    # corner is the goal.
+    # Find goal GPS point. Assume that the bottom lef corner is the start 
+    # and the top right corner is the goal.
     xShift = lonSize * nodeSize
     yShift = latSize * nodeSize
     latShift = yShift / earthRadius
@@ -58,12 +58,24 @@ def main(*args, **kwargs):
     
     
     # Generate cost map, assuming a square map for now 
-    costMap = [[randint(1, maxGradient) for j in range(lonSize)] for i in range(latSize)]
+    costMap = [[randint(10, maxGradient) for j in range(lonSize)] for \
+                i in range(latSize)]
     
     
     
     # Write information to file
-    with open(costMapFile, 'w') as outFile:
+    with open(costMapFile, 'w') as outFile:  
+        # GPS
+        # Format as:
+        # StartLat StartLon
+        # EndLat EndLon
+        out = ''
+        out += str(radToDeg(startGPS[0])) +  ' ' + \
+            str(radToDeg(startGPS[1])) + '\n'
+        out += str(radToDeg(endGPS[0])) + ' ' + \
+            str(radToDeg(endGPS[1])) + '\n'
+        outFile.write(out)
+        
         # Cost Map
         for row in costMap:
             out = ''
@@ -71,16 +83,6 @@ def main(*args, **kwargs):
                 out += str(cost) + ' '
             
             outFile.write(out + '\n')
-            
-        # GPS
-        # Format as:
-        # StartLat StartLon
-        # EndLat EndLon
-        out = ''
-        out += str(radToDeg(startGPS[0])) +  ' ' + str(radToDeg(startGPS[1]))
-        out += '\n'
-        out += str(radToDeg(endGPS[0])) + ' ' + str(radToDeg(endGPS[1]))
-        outFile.write(out)
         
 
     debug = True
