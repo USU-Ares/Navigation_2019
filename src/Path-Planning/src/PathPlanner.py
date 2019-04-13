@@ -27,12 +27,17 @@ class PathPlanner:
         
         self.distance = sqrt(deltaX**2 + deltaY**2) # Flat Earth Model
         
+        print("DeltaX: ",deltaX)
+        print("DeltaY: ",deltaY)
+        print("Cell size: ", self.cellSize)
         self.cellNumX = deltaX // self.cellSize
         self.cellNumY = deltaY // self.cellSize
         
         # Dictionary object will not support a deepcopy when assigned to its own variable.
         self.costMap = [[{'cost': 0, 'gradient': 0, 'heuristic': 0, 'total': 0, 'prev': None} \
                          for i in range(self.cellNumX+1)] for j in range(self.cellNumY+1)]
+        print("cellNumX: ",self.cellNumX)
+        print("cellNumY: ",self.cellNumY)
     
     
         
@@ -142,9 +147,14 @@ class PathPlanner:
         return (ceil(y * self.cellNumY), ceil(x * self.cellNumX))
         
     def updateCostMap(self, costs):
+        print("Costs: " , len(costs), "\t", len(costs[0]))
+        print("map: " , len(self.costMap), "\t", len(self.costMap[0]))
         for i in range(len(costs)):
             for j in range(len(costs[i])):
                 self.costMap[i][j]['cost'] = costs[i][j]
         
     def degToRad(self, angle):
+        print(type(angle))
+        print("angle: ",angle,"\t",pi/180)
+        print(angle * pi/180)
         return angle * (pi/180)
