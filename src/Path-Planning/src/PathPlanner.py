@@ -141,6 +141,10 @@ class PathPlanner:
         
         return (ceil(y * self.cellNumY), ceil(x * self.cellNumX))
         
+    def updateCostMap(self, costs):
+        for i in range(len(costs)):
+            for j in range(len(costs[i])):
+                self.costMap[i][j]['cost'] = costs[i][j]
         
     def degToRad(self, angle):
         return angle * (pi/180)
