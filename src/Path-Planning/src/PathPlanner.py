@@ -3,6 +3,7 @@ from math import pi, sin, cos, asin
 from math import sqrt, ceil, floor
 
 from copy import deepcopy
+import sys # exit
 
 earthRadius = 6378e3
 
@@ -22,22 +23,26 @@ class PathPlanner:
         self.deltaLat = abs(self.endLat - self.startLat)
         self.deltaLon = abs(self.endLon - self.startLon)
         
-        deltaX = floor(2 * earthRadius * asin(sqrt( cos(startLat)**2 * sin(self.deltaLon/2)**2 ) ) )
+        #deltaX = floor(2 * earthRadius * asin(sqrt( cos(startLat)**2 * sin(self.deltaLon/2)**2 ) ) )
+        deltaX = floor(earthRadius * self.deltaLon)
         deltaY = floor(earthRadius * self.deltaLat)
         
-        self.distance = sqrt(deltaX**2 + deltaY**2) # Flat Earth Model
+        self.distance = sqrt(deltaX**2 + deltaY**2) 
         
-        print("DeltaX: ",deltaX)
-        print("DeltaY: ",deltaY)
-        print("Cell size: ", self.cellSize)
         self.cellNumX = deltaX // self.cellSize
         self.cellNumY = deltaY // self.cellSize
+        #print('X and Y cell numbers: ', self.cellNumX, self.cellNumY)
         
         # Dictionary object will not support a deepcopy when assigned to its own variable.
         self.costMap = [[{'cost': 0, 'gradient': 0, 'heuristic': 0, 'total': 0, 'prev': None} \
                          for i in range(self.cellNumX+1)] for j in range(self.cellNumY+1)]
-        print("cellNumX: ",self.cellNumX)
-        print("cellNumY: ",self.cellNumY)
+        
+        with open('debug.txt', 'w') as outFile:
+            for row in self.costMap:
+                outFile.write(str(row) + '\n')
+        
+
+
     
     
         
@@ -130,8 +135,7 @@ class PathPlanner:
         minIndex = 0
         minItem = array[0]
         for i in range(len(array)):
-            if self.costMap[array[i][0]][array[i][1]]['total'] < \
-               self.costMap[minItem[0]][minItem[1]]['total']:
+            if self.costMap[array[i][0]][array[i][1]]['total'] < self.costMap[minItem[0]][minItem[1]]['total']:
                 minIndex = i
             minItem = deepcopy(array[minIndex])
         
@@ -146,15 +150,43 @@ class PathPlanner:
         
         return (ceil(y * self.cellNumY), ceil(x * self.cellNumX))
         
+    
     def updateCostMap(self, costs):
-        print("Costs: " , len(costs), "\t", len(costs[0]))
-        print("map: " , len(self.costMap), "\t", len(self.costMap[0]))
+        
         for i in range(len(costs)):
             for j in range(len(costs[i])):
-                self.costMap[i][j]['cost'] = costs[i][j]
+                try:
+                    self.costMap[i][j]['cost'] = costs[i][j]
+                except IndexError as error:
+                    print('Im a dissapointment!')
+                    errorLog = {'error': error, 'index': (i, j)}
+                    self.panic(errorLog)
+        
         
     def degToRad(self, angle):
-        print(type(angle))
-        print("angle: ",angle,"\t",pi/180)
-        print(angle * pi/180)
+
         return angle * (pi/180)
+    
+    def panic(self, errorLog):
+        
+        for (key, value) in errorLog.items():
+            print(key, value)
+            
+        sys.exit(0)
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+
+

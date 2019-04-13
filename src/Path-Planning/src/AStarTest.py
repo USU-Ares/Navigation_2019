@@ -33,8 +33,8 @@ def radToDeg(angle):
 
 # Generate start/stop GPS points, a cost map (format as matrix of positive 
 # integers), write data to file.
-latSize = 25
-lonSize = 25
+latSize = 100
+lonSize = 100
 nodeSize = 1 # meters
 maxGradient = 99
 
@@ -58,8 +58,7 @@ def main(*args, **kwargs):
     
     
     # Generate cost map, assuming a square map for now 
-    costMap = [[randint(10, maxGradient) for j in range(lonSize)] for \
-                i in range(latSize)]
+    costMap = [[randint(10, maxGradient) for j in range(lonSize)] for i in range(latSize)]
     
     
     
