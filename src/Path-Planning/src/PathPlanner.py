@@ -30,12 +30,9 @@ class PathPlanner:
         self.cellNumX = deltaX // self.cellSize
         self.cellNumY = deltaY // self.cellSize
         
-        self.costMap = [[{'cost': 0, 'gradient': 0, 'heuristic': 0, 'total': 0, 'prev': None} for i in range(self.cellNumX+1)] for j in range(self.cellNumY+1)]
-        print(self.costMap[0][0] is self.costMap[0][1])
-        print(self.cellNumX)
-        print(len(self.costMap))
-        
-    
+        # Dictionary object will not support a deepcopy when assigned to its own variable.
+        self.costMap = [[{'cost': 0, 'gradient': 0, 'heuristic': 0, 'total': 0, 'prev': None} \
+                         for i in range(self.cellNumX+1)] for j in range(self.cellNumY+1)]
     
     
         
@@ -56,17 +53,15 @@ class PathPlanner:
                 element['gradient'] = None
                 element['heuristic'] = None
         
-        print(currentPos)
+        
         self.costMap[currentPos[0]][currentPos[1]]['gradient'] = 0
         self.costMap[currentPos[0]][currentPos[1]]['heuristic'] = self.calcHeuristic(currentPos, goalPos)
-        print('open set size: ', len(openSet))
-        print(not openSet)
+
         while openSet:
-            #print('open set size: ', len(openSet))
+            
             # Assign the node with the minimum gradient value to the current cell
             currentPos = self.extractMin(openSet)
             
-            print(currentPos, goalPos)
             if currentPos == goalPos:
                 return self.reconstructPath(goalPos)
             
@@ -88,12 +83,6 @@ class PathPlanner:
                     self.costMap[element[0]][element[1]]['gradient'] = tempGradient
                     self.costMap[element[0]][element[1]]['heuristic'] = self.calcHeuristic(element, goalPos)
                     self.costMap[element[0]][element[1]]['total'] = tempGradient + self.calcHeuristic(element, goalPos)
-                    debug = 1
-                    #if (element == (4,5)):
-                    for row in self.costMap:
-                        for element in row:
-                            print(element['prev'], end=" ")
-                        print()
     
     
     
@@ -122,17 +111,11 @@ class PathPlanner:
         
         currentNode = goalNode
         totalPath = []
-        print('hello there')
         
-        for row in self.costMap:
-            for element in row:
-                print(element['prev'], end=" ")
-            print()
         while not self.costMap[currentNode[0]][currentNode[1]]['prev'] is None:
             
             totalPath.append(currentNode)
             currentNode = self.costMap[currentNode[0]][currentNode[1]]['prev']
-            print('currentNode: ',  currentNode, self.costMap[currentNode[0]][currentNode[1]])
             
         return totalPath[::-1]
     
@@ -147,11 +130,7 @@ class PathPlanner:
                 minIndex = i
             minItem = deepcopy(array[minIndex])
         
-        print("Min index: ",minIndex)
-        print("Array: ",array)
         array.pop(minIndex)
-        print("Post pop:",array)
-        print("Min item:",minItem)
         return minItem
         
     
